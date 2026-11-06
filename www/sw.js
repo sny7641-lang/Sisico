@@ -1,6 +1,6 @@
 // Offline cache for the installed web app (PWA). Network first, cache as fallback.
-const CACHE = "sisico-v2";
-const CORE = ["./", "index.html", "words.js", "examples-basic.js", "examples-middle.js", "examples-daily.js", "examples-suneung.js", "examples-toeic.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "sisico-v3";
+const CORE = ["./", "index.html", "decks.js", "words.js", "examples-daily.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
 });

@@ -186,6 +186,11 @@ details[open] summary { margin-bottom: 10px; }
 .deck .btn { grid-row: 1 / span 2; grid-column: 2; }
 .deck .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: 8px; }
 .deck .bar div { height: 100%; background: var(--accent); }
+.example-ko { margin: 0; color: var(--muted); font-size: 14px; }
+.badge { margin: 0; align-self: flex-start; font-family: var(--f-mono); font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; }
+.sources { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.sources p { margin: 0 0 8px; }
+.sources a { color: var(--accent); }
 .section-title { margin: 6px 0 0; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
 .tag { font-family: var(--f-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; vertical-align: 2px; }
 #k-no, #k-yes { min-width: 120px; min-height: 48px; }
@@ -267,22 +272,29 @@ details[open] summary { margin-bottom: 10px; }
         <summary>데이터 관리</summary>
         <div class="row">
           <button class="btn small" type="button" id="reset-progress">학습 기록 초기화</button>
-          <button class="btn small" type="button" id="restore-sample">예시 단어 다시 넣기</button>
           <button class="btn small bad" type="button" id="clear-all">모든 단어 삭제</button>
         </div>
-        <p class="muted" id="confirm-msg" style="margin:10px 0 0;font-size:13px">단어와 학습 기록은 이 브라우저에만 저장됩니다.</p>
+        <p class="muted" id="confirm-msg" style="margin:10px 0 0;font-size:13px">단어와 학습 기록은 이 기기에만 저장됩니다.</p>
+      </details>
+
+      <details>
+        <summary>단어 출처</summary>
+        <div class="sources">
+          <p><b>교육과정 단어장</b>: 교육부 2022 개정 영어과 교육과정 [별표 3] 기본 어휘 3,000개 (한국교육과정평가원 KICE Word Lister 자료). 초등 권장(*) 801개, 중학교·고등 공통 권장(**) 1,200개, 그 외 1,000개로 나눴습니다.</p>
+          <p><b>수능 기출 빈출</b>: 한국교육과정평가원이 공개한 2014~2026학년도 대학수학능력시험 영어 영역 문제지와 듣기 대본 13개년을 분석해, 3개 연도 이상 나온 단어를 출제 연도 수 순으로 모았습니다. 초등 수준 단어와 기능어는 뺐습니다.</p>
+          <p><b>토익 빈출</b>: <a href="https://www.newgeneralservicelist.com/toeic-service-list" target="_blank" rel="noopener">TOEIC Service List 1.2</a> (Browne, C. &amp; Culligan, B., CC BY-SA 4.0). 토익 지문 말뭉치에서 자주 쓰인 순서입니다.</p>
+          <p><b>예문</b>: 한국어 번역이 함께 나오는 예문은 <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> 문장입니다 (CC BY 2.0 FR, manythings.org 정리본). 나머지 예문과 모든 단어의 한국어 뜻은 앱에서 직접 작성했습니다.</p>
+          <p><b>일상 회화</b>: 자주 쓰는 표현을 직접 골라 정리했습니다.</p>
+        </div>
       </details>
     </div>
   </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="decks.js"></script>
 <script src="words.js"></script>
-<script src="examples-basic.js"></script>
-<script src="examples-middle.js"></script>
 <script src="examples-daily.js"></script>
-<script src="examples-suneung.js"></script>
-<script src="examples-toeic.js"></script>
 <script>
 (function () {
   "use strict";
@@ -291,56 +303,53 @@ details[open] summary { margin-bottom: 10px; }
   var INTERVALS = [0, 1, 2, 4, 7, 15];
   var DAY = 86400000;
 
-  var SAMPLE = [
-    ["abandon", "v.", "버리다, 포기하다", "They had to abandon the car in the snow."],
-    ["accurate", "adj.", "정확한", "The report gives an accurate picture of the market."],
-    ["benefit", "n.", "이익, 혜택", "Regular exercise has many health benefits."],
-    ["candid", "adj.", "솔직한", "Thank you for your candid feedback."],
-    ["consistent", "adj.", "일관된, 꾸준한", "Consistent practice is the key to learning."],
-    ["curious", "adj.", "호기심 많은", "Children are naturally curious about the world."],
-    ["decline", "v.", "감소하다, 거절하다", "She declined the invitation politely."],
-    ["efficient", "adj.", "효율적인", "This new engine is far more efficient."],
-    ["eager", "adj.", "열망하는", "He was eager to start his new job."],
-    ["fragile", "adj.", "깨지기 쉬운", "Handle the box carefully; it is fragile."],
-    ["genuine", "adj.", "진짜의, 진심 어린", "Her smile was warm and genuine."],
-    ["hesitate", "v.", "망설이다", "Don't hesitate to ask if you need help."],
-    ["improve", "v.", "향상시키다", "Reading every day will improve your vocabulary."],
-    ["inevitable", "adj.", "피할 수 없는", "Change is inevitable in any company."],
-    ["maintain", "v.", "유지하다", "It is hard to maintain focus for hours."],
-    ["obvious", "adj.", "명백한", "The answer seemed obvious after the explanation."],
-    ["persuade", "v.", "설득하다", "I tried to persuade him to come with us."],
-    ["reluctant", "adj.", "꺼리는, 마지못한", "She was reluctant to speak in public."],
-    ["resilient", "adj.", "회복력 있는", "Kids are often more resilient than adults."],
-    ["sufficient", "adj.", "충분한", "We have sufficient time to finish the project."],
-    ["thorough", "adj.", "철저한", "The doctor gave him a thorough examination."],
-    ["vivid", "adj.", "생생한", "I have a vivid memory of that day."],
-    ["take over", "phr.", "인수하다, 떠맡다", "She will take over the team next month."],
-    ["wander", "v.", "거닐다, 헤매다", "We wandered around the old town all afternoon."]
-  ];
 
   function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
-  function makeWord(w, pos, m, ex, deckId) {
-    var o = { id: uid(), word: w.trim(), pos: pos || "", meaning: m.trim(), example: (ex || "").trim(), box: 0, due: 0, seen: 0, right: 0 };
-    if (deckId) o.deck = deckId;
-    return o;
+  function makeWord(w, pos, m, ex) {
+    return { id: uid(), word: w.trim(), pos: pos || "", meaning: m.trim(), example: (ex || "").trim(), box: 0, due: 0, seen: 0, right: 0 };
   }
-  var DECKS = (window.SISICO_DECKS || []).map(function (d) {
-    var words = d.data.split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { return l.split("|"); });
-    var ex = {};
-    ((window.SISICO_EXAMPLES || {})[d.id] || "").split("\n").forEach(function (l) {
+  /* Built-in decks. Deck words are stored without their text; meaning and examples come from
+     decks.js (generated from data/ by tools/build_decks.py) so the saved data stays small. */
+  var DATA = window.SISICO_DATA || { words: {}, decks: [] };
+  var DECKS = DATA.decks.map(function (d) {
+    return { id: d.id, name: d.name, desc: d.desc, src: d.src, words: d.words, years: d.years, yearsTotal: d.yearsTotal, dict: DATA.words };
+  });
+  (window.SISICO_DECKS || []).filter(function (d) { return d.id === "daily"; }).forEach(function (d) {
+    var dict = {}, ex = {};
+    (window.SISICO_EXAMPLES && window.SISICO_EXAMPLES.daily || "").split("\n").forEach(function (l) {
       var i = l.indexOf("|"); if (i > 0) ex[l.slice(0, i).trim().toLowerCase()] = l.slice(i + 1).trim();
     });
-    words.forEach(function (r) { r[3] = ex[r[0].toLowerCase()] || ""; });
-    return { id: d.id, name: d.name, desc: d.desc, words: words, ex: ex };
+    var words = d.data.split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) {
+      var r = l.split("|"); dict[r[0].toLowerCase()] = [r[1], r[2], ex[r[0].toLowerCase()] || "", ""]; return r[0];
+    });
+    DECKS.push({ id: "daily", name: "일상 회화", desc: "자주 쓰는 인사·표현과 생활 동사구 (직접 정리)", src: "self", words: words, dict: dict });
   });
+  var OLD_DECKS = { basic: 1, middle: 1, suneung: 1, toeic: 1 };
   function deckById(id) { return DECKS.filter(function (d) { return d.id === id; })[0]; }
   function deckWords(id) { return state.words.filter(function (w) { return w.deck === id; }); }
+  // Give a deck word read-only text fields that are not saved to storage
+  function hydrate(w) {
+    var d = w.deck && deckById(w.deck);
+    var e = d && d.dict[w.word.toLowerCase()];
+    if (!e) return w;
+    var f = { pos: 0, meaning: 1, example: 2, exampleKo: 3 };
+    Object.keys(f).forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(w, k)) delete w[k];
+      Object.defineProperty(w, k, { value: e[f[k]] || "", enumerable: false, configurable: true });
+    });
+    if (d.years) Object.defineProperty(w, "csatYears", { value: d.years[w.word.toLowerCase()] || 0, enumerable: false, configurable: true });
+    return w;
+  }
   function addDeck(id) {
     var d = deckById(id); if (!d) return 0;
-    var n = 0;
-    var have = {};
+    var n = 0, have = {}, legacy = state.legacy || {};
     deckWords(id).forEach(function (w) { have[w.word.toLowerCase()] = 1; });
-    d.words.forEach(function (r) { if (!have[r[0].toLowerCase()]) { state.words.push(makeWord(r[0], r[1], r[2], r[3], id)); n++; } });
+    d.words.forEach(function (word) {
+      var k = word.toLowerCase(); if (have[k]) return;
+      var w = { id: uid(), word: word, deck: id, box: 0, due: 0, seen: 0, right: 0 };
+      if (legacy[k]) { w.box = legacy[k].box; w.due = legacy[k].due; w.seen = legacy[k].seen; w.right = legacy[k].right; }
+      state.words.push(hydrate(w)); n++;
+    });
     return n;
   }
   // Which words the cards, quiz and list work on: "all", "mine" (added by hand) or a deck id
@@ -350,7 +359,6 @@ details[open] summary { margin-bottom: 10px; }
     if (sc === "mine") return state.words.filter(function (w) { return !w.deck; });
     return deckWords(sc);
   }
-  function sampleWords() { return SAMPLE.map(function (s) { return makeWord(s[0], s[1], s[2], s[3]); }); }
 
   var state = { words: [] };
   state = load();
@@ -361,16 +369,22 @@ details[open] summary { margin-bottom: 10px; }
       if (raw) {
         var s = JSON.parse(raw);
         if (s && Array.isArray(s.words)) {
-          // Fill in example sentences for deck words saved before examples existed
-          s.words.forEach(function (w) {
-            if (!w.example && w.deck) { var d = deckById(w.deck); if (d && d.ex[w.word.toLowerCase()]) w.example = d.ex[w.word.toLowerCase()]; }
+          // Earlier versions had hand-picked decks; keep their study progress so it carries over
+          // when the same word is added from a new deck, then drop them.
+          s.legacy = s.legacy || {};
+          s.words = s.words.filter(function (w) {
+            if (!w.deck || !OLD_DECKS[w.deck]) return true;
+            if (w.seen || w.box) s.legacy[w.word.toLowerCase()] = { box: w.box, due: w.due, seen: w.seen, right: w.right };
+            return false;
           });
+          s.words.forEach(hydrate);
+          if (OLD_DECKS[s.scope]) s.scope = "all";
           return s;
         }
       }
     } catch (e) {}
     var fresh = { words: [], lastDay: "", streak: 0, scope: "all" };
-    state = fresh; addDeck("basic");
+    state = fresh; addDeck("elem");
     return fresh;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
@@ -493,6 +507,8 @@ details[open] summary { margin-bottom: 10px; }
         '<div class="face back"><div class="top"><span class="mono">' + esc(w.word) + '</span><span class="mono">' + esc(w.pos) + '</span></div>' +
           '<div class="meaning">' + esc(w.meaning) + '</div>' +
           (w.example ? '<p class="example">' + highlight(w.example, w.word) + '</p>' : '') +
+          (w.exampleKo ? '<p class="example-ko">' + esc(w.exampleKo) + '</p>' : '') +
+          (w.csatYears ? '<p class="badge">수능 ' + deckById("csat").yearsTotal + '개년 중 ' + w.csatYears + '개년 출제</p>' : '') +
           '<div class="hint">외웠으면 ‘알아요’, 헷갈리면 ‘다시’</div></div>' +
       '</button></div>' +
       '<div class="row" style="margin-top:16px;justify-content:center">' +
@@ -629,6 +645,8 @@ details[open] summary { margin-bottom: 10px; }
     var list = pool().filter(function (w) {
       return !q || w.word.toLowerCase().indexOf(q) >= 0 || w.meaning.toLowerCase().indexOf(q) >= 0;
     }).sort(function (a, b) { return a.word.localeCompare(b.word); });
+    var total = list.length;
+    list = list.slice(0, 300);
     var ul = $("word-list");
     if (!list.length) {
       ul.innerHTML = '<li style="display:block" class="muted">' + (q ? "검색 결과가 없어요." : "아직 단어가 없어요. 위에서 추가해 보세요.") + '</li>';
@@ -641,7 +659,7 @@ details[open] summary { margin-bottom: 10px; }
         '<button class="icon-btn" data-speak="' + w.id + '">발음</button>' +
         '<button class="icon-btn" data-del="' + w.id + '">삭제</button></div>' +
         '<div class="m">' + esc(w.meaning) + '</div></li>';
-    }).join("");
+    }).join("") + (total > list.length ? '<li style="display:block" class="muted">' + total + '개 중 ' + list.length + '개만 보여요. 검색해서 찾아보세요.</li>' : '');
   }
   $("search").addEventListener("input", renderList);
   $("word-list").addEventListener("click", function (e) {
@@ -688,11 +706,7 @@ details[open] summary { margin-bottom: 10px; }
       state.streak = 0; state.lastDay = ""; save(); renderList(); toast("학습 기록을 초기화했어요");
     });
   });
-  $("restore-sample").addEventListener("click", function () {
-    var n = 0;
-    sampleWords().forEach(function (w) { if (!exists(w.word)) { state.words.push(w); n++; } });
-    save(); renderList(); toast(n ? n + "개 예시 단어를 넣었어요" : "예시 단어가 이미 모두 있어요");
-  });
+
   $("clear-all").addEventListener("click", function () {
     confirmStep(this, "모든 단어 삭제", function () { state.words = []; save(); renderList(); toast("모든 단어를 삭제했어요"); });
   });
