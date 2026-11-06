@@ -278,6 +278,11 @@ details[open] summary { margin-bottom: 10px; }
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="words.js"></script>
+<script src="examples-basic.js"></script>
+<script src="examples-middle.js"></script>
+<script src="examples-daily.js"></script>
+<script src="examples-suneung.js"></script>
+<script src="examples-toeic.js"></script>
 <script>
 (function () {
   "use strict";
@@ -321,7 +326,12 @@ details[open] summary { margin-bottom: 10px; }
   }
   var DECKS = (window.SISICO_DECKS || []).map(function (d) {
     var words = d.data.split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { return l.split("|"); });
-    return { id: d.id, name: d.name, desc: d.desc, words: words };
+    var ex = {};
+    ((window.SISICO_EXAMPLES || {})[d.id] || "").split("\n").forEach(function (l) {
+      var i = l.indexOf("|"); if (i > 0) ex[l.slice(0, i).trim().toLowerCase()] = l.slice(i + 1).trim();
+    });
+    words.forEach(function (r) { r[3] = ex[r[0].toLowerCase()] || ""; });
+    return { id: d.id, name: d.name, desc: d.desc, words: words, ex: ex };
   });
   function deckById(id) { return DECKS.filter(function (d) { return d.id === id; })[0]; }
   function deckWords(id) { return state.words.filter(function (w) { return w.deck === id; }); }
@@ -330,7 +340,7 @@ details[open] summary { margin-bottom: 10px; }
     var n = 0;
     var have = {};
     deckWords(id).forEach(function (w) { have[w.word.toLowerCase()] = 1; });
-    d.words.forEach(function (r) { if (!have[r[0].toLowerCase()]) { state.words.push(makeWord(r[0], r[1], r[2], "", id)); n++; } });
+    d.words.forEach(function (r) { if (!have[r[0].toLowerCase()]) { state.words.push(makeWord(r[0], r[1], r[2], r[3], id)); n++; } });
     return n;
   }
   // Which words the cards, quiz and list work on: "all", "mine" (added by hand) or a deck id
@@ -344,10 +354,20 @@ details[open] summary { margin-bottom: 10px; }
 
   var state = { words: [] };
   state = load();
+  save();
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
-      if (raw) { var s = JSON.parse(raw); if (s && Array.isArray(s.words)) return s; }
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.words)) {
+          // Fill in example sentences for deck words saved before examples existed
+          s.words.forEach(function (w) {
+            if (!w.example && w.deck) { var d = deckById(w.deck); if (d && d.ex[w.word.toLowerCase()]) w.example = d.ex[w.word.toLowerCase()]; }
+          });
+          return s;
+        }
+      }
     } catch (e) {}
     var fresh = { words: [], lastDay: "", streak: 0, scope: "all" };
     state = fresh; addDeck("basic");
@@ -374,6 +394,12 @@ details[open] summary { margin-bottom: 10px; }
   function dueWords() { var now = Date.now(); return pool().filter(function (w) { return w.due <= now && w.box < 5; }); }
   function highlight(example, word) {
     var safe = esc(example);
+    var phrase = word.replace(/[.?!,]+$/, "");
+    if (phrase.indexOf(" ") > 0) {
+      var ep = esc(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var rp = new RegExp("(" + ep + ")", "i");
+      if (rp.test(safe)) return safe.replace(rp, "<mark>$1</mark>");
+    }
     var stem = word.split(" ")[0];
     if (stem.length < 3) return safe;
     var root = stem.length > 4 ? stem.slice(0, stem.length - 1) : stem;
