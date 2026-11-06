@@ -124,6 +124,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .face.back { transform: rotateY(180deg); }
 .face .top { display: flex; justify-content: space-between; color: var(--muted); }
 .word { font-family: var(--f-display); font-weight: 700; font-size: clamp(36px, 9vw, 56px); line-height: 1.05; letter-spacing: -.02em; margin: auto 0 0; overflow-wrap: anywhere; }
+.word.long { font-size: clamp(26px, 7vw, 36px); line-height: 1.2; letter-spacing: -.01em; }
 .pos { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
 .meaning { font-size: 24px; font-weight: 700; margin-top: 6px; overflow-wrap: anywhere; }
 .example { font-family: var(--f-display); font-size: 17px; line-height: 1.5; margin: 0; }
@@ -327,7 +328,9 @@ details[open] summary { margin-bottom: 10px; }
   function addDeck(id) {
     var d = deckById(id); if (!d) return 0;
     var n = 0;
-    d.words.forEach(function (r) { if (!exists(r[0])) { state.words.push(makeWord(r[0], r[1], r[2], "", id)); n++; } });
+    var have = {};
+    deckWords(id).forEach(function (w) { have[w.word.toLowerCase()] = 1; });
+    d.words.forEach(function (r) { if (!have[r[0].toLowerCase()]) { state.words.push(makeWord(r[0], r[1], r[2], "", id)); n++; } });
     return n;
   }
   // Which words the cards, quiz and list work on: "all", "mine" (added by hand) or a deck id
@@ -460,7 +463,7 @@ details[open] summary { margin-bottom: 10px; }
       '<button class="btn small" id="speak">발음 듣기</button></div>' +
       '<div class="card-stage"><button class="card" id="card" aria-label="카드 뒤집기">' +
         '<div class="face front"><div class="top"><span class="mono">' + esc(w.pos || "word") + '</span><span class="boxes" title="암기 단계 ' + w.box + '/5">' + boxes + '</span></div>' +
-          '<div class="word">' + esc(w.word) + '</div><div class="hint">카드를 탭해서 뜻 보기</div></div>' +
+          '<div class="word' + (w.word.length > 14 ? ' long' : '') + '">' + esc(w.word) + '</div><div class="hint">카드를 탭해서 뜻 보기</div></div>' +
         '<div class="face back"><div class="top"><span class="mono">' + esc(w.word) + '</span><span class="mono">' + esc(w.pos) + '</span></div>' +
           '<div class="meaning">' + esc(w.meaning) + '</div>' +
           (w.example ? '<p class="example">' + highlight(w.example, w.word) + '</p>' : '') +
@@ -539,7 +542,7 @@ details[open] summary { margin-bottom: 10px; }
       var opts = shuffle(others.concat([w]));
       body.innerHTML = prog +
         '<div class="quiz-q"><span class="mono muted">' + (qIdx + 1) + '번 · 알맞은 뜻을 고르세요</span>' +
-        '<div class="row spread"><div class="word" style="margin:0">' + esc(w.word) + '</div><button class="btn small" id="q-speak">발음 듣기</button></div></div>' +
+        '<div class="row spread"><div class="word' + (w.word.length > 14 ? ' long' : '') + '" style="margin:0;min-width:0">' + esc(w.word) + '</div><button class="btn small" id="q-speak">발음 듣기</button></div></div>' +
         '<div class="choices" style="margin-top:12px">' + opts.map(function (o, i) {
           return '<button class="choice" data-id="' + o.id + '"><span class="mono muted">' + (i + 1) + '</span>&nbsp; ' + esc(o.meaning) + '</button>';
         }).join("") + '</div>' +

@@ -214,6 +214,389 @@ worry|v.|걱정하다
 `
   },
   {
+    id: "middle",
+    name: "중학 필수",
+    desc: "중학교 교과서 핵심 단어 (기초 필수 다음 단계)",
+    data: `
+absent|adj.|결석한
+abroad|adv.|해외로
+achieve|v.|성취하다
+action|n.|행동
+admire|v.|존경하다, 감탄하다
+advantage|n.|장점, 이점
+adventure|n.|모험
+against|prep.|~에 반대하여
+aim|n.|목표
+amazing|adj.|놀라운
+amount|n.|양, 액수
+ancient|adj.|고대의
+anyway|adv.|어쨌든
+apologize|v.|사과하다
+area|n.|지역, 분야
+argue|v.|논쟁하다, 주장하다
+arrange|v.|정리하다, 준비하다
+attack|v.|공격하다
+audience|n.|청중, 관객
+available|adj.|이용할 수 있는
+average|adj.|평균의
+award|n.|상
+backpack|n.|배낭
+bake|v.|굽다
+battle|n.|전투
+beat|v.|이기다, 때리다
+behave|v.|행동하다
+behind|prep.|~ 뒤에
+belong|v.|속하다
+benefit|n.|이익, 혜택
+blind|adj.|눈먼
+blood|n.|피
+board|n.|판, 게시판
+boil|v.|끓이다
+bored|adj.|지루한
+brain|n.|뇌
+breathe|v.|숨 쉬다
+bridge|n.|다리
+burn|v.|타다, 태우다
+calm|adj.|침착한, 고요한
+cause|n.|원인
+ceiling|n.|천장
+century|n.|세기, 100년
+character|n.|성격, 등장인물
+chemical|adj.|화학의
+citizen|n.|시민
+classmate|n.|반 친구
+climate|n.|기후
+coach|n.|코치
+coin|n.|동전
+community|n.|공동체, 지역 사회
+company|n.|회사, 동료
+condition|n.|상태, 조건
+contest|n.|대회
+control|v.|통제하다
+conversation|n.|대화
+cost|n.|비용
+cough|n.|기침
+courage|n.|용기
+crowd|n.|군중
+cure|v.|치료하다
+customer|n.|손님, 고객
+damage|n.|손상, 피해
+dead|adj.|죽은
+death|n.|죽음
+degree|n.|정도, 도(온도)
+department|n.|부서, 학과
+depend|v.|의존하다
+desert|n.|사막
+design|n.|디자인, 설계
+destroy|v.|파괴하다
+develop|v.|발전시키다, 개발하다
+diary|n.|일기
+die|v.|죽다
+disappear|v.|사라지다
+disease|n.|질병
+display|n.|전시
+divide|v.|나누다
+document|n.|문서
+donate|v.|기부하다
+education|n.|교육
+effect|n.|효과, 영향
+effort|n.|노력
+electricity|n.|전기
+emotion|n.|감정
+energy|n.|에너지, 활력
+engineer|n.|기술자
+event|n.|사건, 행사
+exam|n.|시험
+excellent|adj.|훌륭한
+excited|adj.|신이 난
+exist|v.|존재하다
+expect|v.|기대하다, 예상하다
+express|v.|표현하다
+fact|n.|사실
+fail|v.|실패하다
+fair|adj.|공정한
+fashion|n.|패션, 유행
+fault|n.|잘못, 결점
+fear|n.|두려움
+festival|n.|축제
+field|n.|들판, 분야
+flight|n.|비행, 항공편
+flood|n.|홍수
+force|n.|힘
+form|n.|형태, 서식
+freedom|n.|자유
+fuel|n.|연료
+gain|v.|얻다
+generation|n.|세대
+gentle|adj.|온화한
+goal|n.|목표
+government|n.|정부
+grade|n.|성적, 학년
+greet|v.|인사하다
+ground|n.|땅
+guide|n.|안내인
+harmony|n.|조화
+harvest|n.|수확
+heal|v.|낫게 하다
+helpful|adj.|도움이 되는
+hero|n.|영웅
+honest|adj.|정직한
+honor|n.|명예
+human|n.|인간
+humor|n.|유머
+illness|n.|병
+improve|v.|향상시키다
+include|v.|포함하다
+increase|v.|증가하다
+information|n.|정보
+injure|v.|다치게 하다
+insect|n.|곤충
+instead|adv.|대신에
+interest|n.|관심, 흥미
+invent|v.|발명하다
+island|n.|섬
+judge|v.|판단하다
+knowledge|n.|지식
+law|n.|법
+lead|v.|이끌다
+local|adj.|지역의
+loss|n.|손실, 상실
+main|adj.|주된
+manage|v.|관리하다, 해내다
+match|n.|경기, 성냥
+material|n.|재료, 자료
+matter|n.|문제, 일
+medicine|n.|약, 의학
+mention|v.|언급하다
+message|n.|메시지
+method|n.|방법
+mind|n.|마음, 정신
+mix|v.|섞다
+modern|adj.|현대의
+moment|n.|순간
+national|adj.|국가의
+neighbor|n.|이웃
+nod|v.|고개를 끄덕이다
+ocean|n.|대양, 바다
+opinion|n.|의견
+opportunity|n.|기회
+pollution|n.|오염
+population|n.|인구
+positive|adj.|긍정적인
+pour|v.|붓다, 따르다
+power|n.|힘, 권력
+prefer|v.|더 좋아하다
+prevent|v.|막다, 예방하다
+price|n.|가격
+produce|v.|생산하다
+product|n.|제품
+project|n.|프로젝트, 과제
+public|adj.|공공의
+purpose|n.|목적
+raise|v.|올리다, 기르다
+realize|v.|깨닫다
+recently|adv.|최근에
+recycle|v.|재활용하다
+reduce|v.|줄이다
+relax|v.|휴식을 취하다
+report|n.|보고서
+respect|v.|존중하다
+result|n.|결과
+role|n.|역할
+rule|n.|규칙
+sail|v.|항해하다
+science|n.|과학
+search|v.|찾다, 검색하다
+sense|n.|감각
+shape|n.|모양
+silent|adj.|조용한, 말없는
+society|n.|사회
+solve|v.|해결하다
+source|n.|원천, 출처
+spread|v.|퍼지다, 펼치다
+stage|n.|무대, 단계
+support|v.|지지하다, 지원하다
+symbol|n.|상징
+system|n.|체계, 시스템
+temperature|n.|온도
+title|n.|제목
+tradition|n.|전통
+traffic|n.|교통
+trash|n.|쓰레기
+trust|v.|믿다, 신뢰하다
+universe|n.|우주
+upset|adj.|속상한
+value|n.|가치
+victory|n.|승리
+volunteer|n.|자원봉사자
+vote|v.|투표하다
+war|n.|전쟁
+wealth|n.|부, 재산
+weather|n.|날씨
+wild|adj.|야생의
+`
+  },
+  {
+    id: "daily",
+    name: "일상 회화",
+    desc: "자주 쓰는 인사·표현과 생활 동사구",
+    data: `
+How's it going?|phr.|어떻게 지내?
+What's up?|phr.|무슨 일이야? / 안녕?
+Long time no see.|phr.|오랜만이야.
+Nice to meet you.|phr.|만나서 반가워요.
+See you later.|phr.|나중에 봐.
+Take care.|phr.|잘 지내, 몸조심해.
+Have a good one.|phr.|좋은 하루 보내.
+Thank you so much.|phr.|정말 고마워요.
+No problem.|phr.|괜찮아요, 별말씀을요.
+You're welcome.|phr.|천만에요.
+I'm sorry to hear that.|phr.|그것참 안됐네요.
+Excuse me.|phr.|실례합니다.
+Never mind.|phr.|신경 쓰지 마.
+Don't worry about it.|phr.|걱정하지 마.
+That's okay.|phr.|괜찮아.
+Of course.|phr.|물론이지.
+Sounds good.|phr.|좋아, 그렇게 하자.
+I see.|phr.|그렇구나, 알겠어.
+I got it.|phr.|알겠어, 이해했어.
+I have no idea.|phr.|전혀 모르겠어.
+Let me think.|phr.|생각 좀 해 볼게.
+It's up to you.|phr.|네가 정해.
+I'm not sure.|phr.|잘 모르겠어.
+Are you serious?|phr.|진심이야?
+No way!|phr.|말도 안 돼!
+Good for you.|phr.|잘됐다.
+Congratulations!|phr.|축하해!
+Good luck.|phr.|행운을 빌어.
+Cheer up.|phr.|힘내.
+You can do it.|phr.|넌 할 수 있어.
+Take your time.|phr.|천천히 해.
+Hurry up.|phr.|서둘러.
+Watch out!|phr.|조심해!
+Help yourself.|phr.|마음껏 드세요.
+Make yourself at home.|phr.|편하게 있어.
+What do you do?|phr.|무슨 일 하세요?
+Where are you from?|phr.|어디 출신이에요?
+How old are you?|phr.|몇 살이에요?
+What time is it?|phr.|몇 시예요?
+How much is it?|phr.|얼마예요?
+Can I help you?|phr.|도와드릴까요?
+Can you help me?|phr.|좀 도와줄래요?
+Could you say that again?|phr.|다시 말해 줄래요?
+What does this mean?|phr.|이게 무슨 뜻이에요?
+How do you say this in English?|phr.|이거 영어로 뭐라고 해요?
+Where is the restroom?|phr.|화장실이 어디예요?
+I'm just looking.|phr.|그냥 구경하는 중이에요.
+Can I try this on?|phr.|이거 입어 봐도 돼요?
+Do you have this in a smaller size?|phr.|이거 더 작은 사이즈 있어요?
+I'll take it.|phr.|이걸로 할게요.
+Can I pay by card?|phr.|카드로 계산해도 돼요?
+Can I get a refund?|phr.|환불받을 수 있나요?
+For here or to go?|phr.|드시고 가세요, 가져가세요?
+To go, please.|phr.|포장해 주세요.
+Can I see the menu?|phr.|메뉴 좀 볼 수 있을까요?
+I'd like to order.|phr.|주문할게요.
+What do you recommend?|phr.|뭘 추천하세요?
+Check, please.|phr.|계산서 주세요.
+It's on me.|phr.|내가 낼게.
+Let's split the bill.|phr.|나눠서 내자.
+I'm full.|phr.|배불러.
+I'm starving.|phr.|배고파 죽겠어.
+It smells good.|phr.|냄새 좋다.
+How was your day?|phr.|오늘 하루 어땠어?
+What are you up to?|phr.|뭐 하고 있어? / 뭐 할 거야?
+Are you free tonight?|phr.|오늘 밤에 시간 있어?
+Let's hang out.|phr.|같이 놀자.
+What time works for you?|phr.|몇 시가 괜찮아?
+I'm on my way.|phr.|가는 중이야.
+I'm running late.|phr.|좀 늦을 것 같아.
+Sorry I'm late.|phr.|늦어서 미안해.
+I'll be right back.|phr.|금방 올게.
+Hold on a second.|phr.|잠깐만 기다려.
+I can't make it.|phr.|못 갈 것 같아.
+Maybe next time.|phr.|다음에 하자.
+Let me know.|phr.|알려 줘.
+Keep in touch.|phr.|연락하고 지내자.
+Call me later.|phr.|나중에 전화해.
+I'll text you.|phr.|문자할게.
+What's wrong?|phr.|무슨 일 있어?
+I don't feel well.|phr.|몸이 안 좋아.
+I have a headache.|phr.|머리가 아파.
+I caught a cold.|phr.|감기에 걸렸어.
+Get well soon.|phr.|빨리 나아.
+I'm so tired.|phr.|너무 피곤해.
+I'm stressed out.|phr.|스트레스 받아.
+I'm bored.|phr.|심심해.
+I'm so excited.|phr.|너무 신나.
+That's awesome!|phr.|대박이다! / 멋지다!
+That's too bad.|phr.|그거 안됐다.
+It doesn't matter.|phr.|상관없어.
+It's not a big deal.|phr.|별일 아니야.
+I mean it.|phr.|진심이야.
+Just kidding.|phr.|농담이야.
+You're right.|phr.|네 말이 맞아.
+I agree with you.|phr.|네 말에 동의해.
+I don't think so.|phr.|난 그렇게 생각 안 해.
+Me too.|phr.|나도.
+Me neither.|phr.|나도 아니야.
+Why not?|phr.|왜 안 돼? / 좋지.
+Is that so?|phr.|그래?
+What happened?|phr.|무슨 일이 있었어?
+Guess what!|phr.|있잖아! (뭔지 맞혀 봐)
+By the way|phr.|그런데, 그건 그렇고
+Anyway|phr.|어쨌든
+Actually|phr.|사실은
+To be honest|phr.|솔직히 말하면
+In my opinion|phr.|내 생각에는
+For example|phr.|예를 들면
+Of course not.|phr.|물론 아니지.
+I'm looking forward to it.|phr.|기대하고 있어.
+I can't wait.|phr.|너무 기다려져.
+Have fun!|phr.|재미있게 놀아!
+Enjoy your meal.|phr.|맛있게 드세요.
+Bless you.|phr.|(재채기한 사람에게) 몸조심해.
+After you.|phr.|먼저 가세요.
+Go ahead.|phr.|먼저 하세요, 어서 해.
+Same here.|phr.|나도 마찬가지야.
+So far so good.|phr.|지금까지는 좋아.
+It's getting late.|phr.|시간이 늦었네.
+I have to go now.|phr.|이제 가야 해.
+Good night.|phr.|잘 자.
+Sweet dreams.|phr.|좋은 꿈 꿔.
+wake up|phr.|잠에서 깨다
+get up|phr.|일어나다
+take a shower|phr.|샤워하다
+brush my teeth|phr.|이를 닦다
+get dressed|phr.|옷을 입다
+have breakfast|phr.|아침을 먹다
+go to school|phr.|학교에 가다
+take a bus|phr.|버스를 타다
+do my homework|phr.|숙제를 하다
+take a break|phr.|쉬다
+take a walk|phr.|산책하다
+do the dishes|phr.|설거지하다
+do the laundry|phr.|빨래하다
+clean my room|phr.|방을 청소하다
+go shopping|phr.|쇼핑하러 가다
+watch TV|phr.|TV를 보다
+go to bed|phr.|자러 가다
+stay up late|phr.|늦게까지 깨어 있다
+take a nap|phr.|낮잠을 자다
+work out|phr.|운동하다
+look for|phr.|찾다
+look forward to|phr.|기대하다
+find out|phr.|알아내다
+give up|phr.|포기하다
+pick up|phr.|줍다, 데리러 가다
+turn on|phr.|켜다
+turn off|phr.|끄다
+put on|phr.|입다, 착용하다
+take off|phr.|벗다, 이륙하다
+check out|phr.|확인하다, 퇴실하다
+`
+  },
+  {
     id: "suneung",
     name: "수능 필수",
     desc: "고등·수능에 자주 나오는 핵심 어휘",
