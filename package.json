@@ -1,0 +1,20 @@
+{
+  "name": "sisico-vocab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sisico 단어장 - English vocabulary study app",
+  "scripts": {
+    "android:add": "cap add android",
+    "android:sync": "cap sync android",
+    "android:icons": "capacitor-assets generate --android --iconBackgroundColor '#0f6b66' --splashBackgroundColor '#e9efee'"
+  },
+  "dependencies": {
+    "@capacitor-community/text-to-speech": "4.1.1",
+    "@capacitor/android": "6.2.1",
+    "@capacitor/core": "6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "6.2.1"
+  }
+}

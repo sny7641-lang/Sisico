@@ -1,0 +1,68 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["www/**", "assets/**", "package.json", "package-lock.json", "capacitor.config.json", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Android project
+        run: |
+          npx cap add android
+          npm run android:icons
+          npx cap sync android
+
+      # Same signing key on every build, so a new APK installs over the old one and keeps your words
+      - name: Use fixed signing key
+        run: |
+          mkdir -p ~/.android
+          cp assets/debug.keystore ~/.android/debug.keystore
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../sisico-vocab.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sisico-vocab-apk
+          path: sisico-vocab.apk
+
+      - name: Publish to the "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Sisico 단어장 (최신 빌드)
+          prerelease: false
+          make_latest: true
+          target_commitish: ${{ github.sha }}
+          body: |
+            휴대폰에서 아래 **sisico-vocab.apk** 를 눌러 내려받아 설치하세요.
+            빌드 커밋: ${{ github.sha }}
+          files: sisico-vocab.apk
