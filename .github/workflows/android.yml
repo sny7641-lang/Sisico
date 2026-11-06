@@ -35,18 +35,25 @@ jobs:
           npm run android:icons
           npx cap sync android
 
-      # Same signing key on every build, so a new APK installs over the old one and keeps your words
-      - name: Use fixed signing key
-        run: |
-          mkdir -p ~/.android
-          cp assets/debug.keystore ~/.android/debug.keystore
-
+      # Sign every build with the same key (assets/debug.keystore) so a new APK installs
+      # over the old one and keeps your words.
       - name: Build APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/assets/debug.keystore" \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=androiddebugkey \
+            -Pandroid.injected.signing.key.password=android
           cp app/build/outputs/apk/debug/app-debug.apk ../sisico-vocab.apk
+
+      - name: Check APK signing key
+        run: |
+          want=$(keytool -list -v -keystore assets/debug.keystore -storepass android | grep -m1 "SHA256:" | awk '{print $2}')
+          got=$(keytool -printcert -jarfile sisico-vocab.apk | grep -m1 "SHA256:" | awk '{print $2}')
+          echo "want $want"; echo "got  $got"
+          test "$want" = "$got"
 
       - uses: actions/upload-artifact@v4
         with:
