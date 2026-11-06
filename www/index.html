@@ -172,9 +172,21 @@ ul.words .act { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 6px; a
 details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
 details summary { cursor: pointer; font-weight: 500; }
 details[open] summary { margin-bottom: 10px; }
-.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); }
+.toast { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); }
 .toast.show { opacity: 1; }
 @media (hover: none) { .kbd { display: none; } }
+.scope { display: flex; align-items: center; gap: 10px; }
+.scope label { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; }
+.scope select { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-weight: 500; }
+.decks { display: flex; flex-direction: column; gap: 10px; }
+.deck { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.deck h3 { margin: 0; font-size: 16px; }
+.deck p { margin: 0; color: var(--muted); font-size: 13px; grid-column: 1; min-width: 0; }
+.deck .btn { grid-row: 1 / span 2; grid-column: 2; }
+.deck .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: 8px; }
+.deck .bar div { height: 100%; background: var(--accent); }
+.section-title { margin: 6px 0 0; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
+.tag { font-family: var(--f-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; vertical-align: 2px; }
 #k-no, #k-yes { min-width: 120px; min-height: 48px; }
 @media (prefers-reduced-motion: reduce) { .card, .progress div, .toast { transition: none; } }
 </style>
@@ -194,6 +206,11 @@ details[open] summary { margin-bottom: 10px; }
       <div><b id="st-streak">0</b>연속일</div>
     </div>
   </header>
+
+  <div class="scope">
+    <label for="scope">공부 범위</label>
+    <select id="scope"></select>
+  </div>
 
   <nav class="tabs" role="tablist">
     <button role="tab" id="tab-cards" data-view="cards" aria-selected="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>카드</button>
@@ -221,6 +238,9 @@ details[open] summary { margin-bottom: 10px; }
   <!-- List -->
   <section id="view-list" hidden>
     <div style="display:flex;flex-direction:column;gap:14px">
+      <h2 class="section-title">기본 단어장</h2>
+      <div class="decks" id="decks"></div>
+      <h2 class="section-title">내 단어 추가</h2>
       <form class="add" id="add-form">
         <label>영어 단어<input id="f-word" required autocomplete="off" placeholder="resilient"></label>
         <label>뜻<input id="f-meaning" required autocomplete="off" placeholder="회복력 있는"></label>
@@ -256,6 +276,7 @@ details[open] summary { margin-bottom: 10px; }
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="words.js"></script>
 <script>
 (function () {
   "use strict";
@@ -292,18 +313,42 @@ details[open] summary { margin-bottom: 10px; }
   ];
 
   function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
-  function makeWord(w, pos, m, ex) {
-    return { id: uid(), word: w.trim(), pos: pos || "", meaning: m.trim(), example: (ex || "").trim(), box: 0, due: 0, seen: 0, right: 0 };
+  function makeWord(w, pos, m, ex, deckId) {
+    var o = { id: uid(), word: w.trim(), pos: pos || "", meaning: m.trim(), example: (ex || "").trim(), box: 0, due: 0, seen: 0, right: 0 };
+    if (deckId) o.deck = deckId;
+    return o;
+  }
+  var DECKS = (window.SISICO_DECKS || []).map(function (d) {
+    var words = d.data.split("\n").map(function (l) { return l.trim(); }).filter(Boolean).map(function (l) { return l.split("|"); });
+    return { id: d.id, name: d.name, desc: d.desc, words: words };
+  });
+  function deckById(id) { return DECKS.filter(function (d) { return d.id === id; })[0]; }
+  function deckWords(id) { return state.words.filter(function (w) { return w.deck === id; }); }
+  function addDeck(id) {
+    var d = deckById(id); if (!d) return 0;
+    var n = 0;
+    d.words.forEach(function (r) { if (!exists(r[0])) { state.words.push(makeWord(r[0], r[1], r[2], "", id)); n++; } });
+    return n;
+  }
+  // Which words the cards, quiz and list work on: "all", "mine" (added by hand) or a deck id
+  function pool() {
+    var sc = state.scope || "all";
+    if (sc === "all") return state.words;
+    if (sc === "mine") return state.words.filter(function (w) { return !w.deck; });
+    return deckWords(sc);
   }
   function sampleWords() { return SAMPLE.map(function (s) { return makeWord(s[0], s[1], s[2], s[3]); }); }
 
-  var state = load();
+  var state = { words: [] };
+  state = load();
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
       if (raw) { var s = JSON.parse(raw); if (s && Array.isArray(s.words)) return s; }
     } catch (e) {}
-    return { words: sampleWords(), lastDay: "", streak: 0 };
+    var fresh = { words: [], lastDay: "", streak: 0, scope: "all" };
+    state = fresh; addDeck("basic");
+    return fresh;
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
@@ -323,7 +368,7 @@ details[open] summary { margin-bottom: 10px; }
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  function dueWords() { var now = Date.now(); return state.words.filter(function (w) { return w.due <= now && w.box < 5; }); }
+  function dueWords() { var now = Date.now(); return pool().filter(function (w) { return w.due <= now && w.box < 5; }); }
   function highlight(example, word) {
     var safe = esc(example);
     var stem = word.split(" ")[0];
@@ -361,9 +406,10 @@ details[open] summary { margin-bottom: 10px; }
   }
 
   function renderStats() {
-    $("st-total").textContent = state.words.length;
+    renderScope();
+    $("st-total").textContent = pool().length;
     $("st-due").textContent = dueWords().length;
-    $("st-master").textContent = state.words.filter(function (w) { return w.box >= 5; }).length;
+    $("st-master").textContent = pool().filter(function (w) { return w.box >= 5; }).length;
     $("st-streak").textContent = currentStreak();
   }
 
@@ -388,15 +434,15 @@ details[open] summary { margin-bottom: 10px; }
   var deck = [], deckIdx = 0, deckMode = "due", sessionDone = 0;
   function startCards(mode) {
     deckMode = mode || "due";
-    deck = shuffle(deckMode === "due" ? dueWords() : state.words);
+    deck = shuffle(deckMode === "due" ? dueWords() : pool());
     deckIdx = 0; sessionDone = 0;
     renderCard();
   }
   function renderCard() {
     var body = $("cards-body");
     renderStats();
-    if (!state.words.length) {
-      body.innerHTML = '<div class="empty"><h2>단어가 없어요</h2><p class="muted">단어 목록 탭에서 외울 단어를 추가해 보세요.</p><button class="btn primary" id="go-list">단어 추가하러 가기</button></div>';
+    if (!pool().length) {
+      body.innerHTML = '<div class="empty"><h2>이 범위에 단어가 없어요</h2><p class="muted">단어장 탭에서 기본 단어장을 추가하거나 내 단어를 넣어 보세요.</p><button class="btn primary" id="go-list">단어장으로 가기</button></div>';
       $("go-list").onclick = function () { show("list"); };
       return;
     }
@@ -463,16 +509,16 @@ details[open] summary { margin-bottom: 10px; }
   });
   function startQuiz() {
     // Prefer words that are weaker (lower box) so the quiz targets what you don't know yet
-    var pool = shuffle(state.words).sort(function (a, b) { return a.box - b.box; });
-    qList = shuffle(pool.slice(0, Math.min(QN, pool.length)));
+    var ps = shuffle(pool()).sort(function (a, b) { return a.box - b.box; });
+    qList = shuffle(ps.slice(0, Math.min(QN, ps.length)));
     qIdx = 0; qScore = 0; renderQuiz();
   }
   function renderQuiz() {
     var body = $("quiz-body");
     $("quiz-score").textContent = qScore + " / " + qIdx;
     renderStats();
-    if (state.words.length < 4) {
-      body.innerHTML = '<div class="empty"><h2>단어가 더 필요해요</h2><p class="muted">퀴즈는 단어가 4개 이상일 때 시작할 수 있어요.</p><button class="btn primary" id="q-go-list">단어 추가하기</button></div>';
+    if (pool().length < 4) {
+      body.innerHTML = '<div class="empty"><h2>단어가 더 필요해요</h2><p class="muted">퀴즈는 공부 범위에 단어가 4개 이상일 때 시작할 수 있어요.</p><button class="btn primary" id="q-go-list">단어 추가하기</button></div>';
       $("q-go-list").onclick = function () { show("list"); };
       return;
     }
@@ -550,7 +596,8 @@ details[open] summary { margin-bottom: 10px; }
   function renderList() {
     renderStats();
     var q = $("search").value.trim().toLowerCase();
-    var list = state.words.filter(function (w) {
+    renderDecks();
+    var list = pool().filter(function (w) {
       return !q || w.word.toLowerCase().indexOf(q) >= 0 || w.meaning.toLowerCase().indexOf(q) >= 0;
     }).sort(function (a, b) { return a.word.localeCompare(b.word); });
     var ul = $("word-list");
@@ -559,7 +606,8 @@ details[open] summary { margin-bottom: 10px; }
       return;
     }
     ul.innerHTML = list.map(function (w) {
-      return '<li><div class="w">' + esc(w.word) + ' <span class="pos">' + esc(w.pos) + '</span></div>' +
+      var dk = w.deck && deckById(w.deck);
+      return '<li><div class="w">' + esc(w.word) + ' <span class="pos">' + esc(w.pos) + '</span>' + (dk && state.scope !== w.deck ? '<span class="tag">' + esc(dk.name) + '</span>' : '') + '</div>' +
         '<div class="act"><span class="mono muted" title="암기 단계">' + (w.box >= 5 ? "완료" : w.box + "/5") + '</span>' +
         '<button class="icon-btn" data-speak="' + w.id + '">발음</button>' +
         '<button class="icon-btn" data-del="' + w.id + '">삭제</button></div>' +
@@ -618,6 +666,45 @@ details[open] summary { margin-bottom: 10px; }
   });
   $("clear-all").addEventListener("click", function () {
     confirmStep(this, "모든 단어 삭제", function () { state.words = []; save(); renderList(); toast("모든 단어를 삭제했어요"); });
+  });
+
+  function renderScope() {
+    var sel = $("scope"), opts = [["all", "전체 단어 (" + state.words.length + ")"]];
+    DECKS.forEach(function (d) { var n = deckWords(d.id).length; if (n) opts.push([d.id, d.name + " (" + n + ")"]); });
+    var mine = state.words.filter(function (w) { return !w.deck; }).length;
+    if (mine) opts.push(["mine", "내 단어 (" + mine + ")"]);
+    if (!opts.some(function (o) { return o[0] === state.scope; })) state.scope = "all";
+    sel.innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === state.scope ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("");
+  }
+  $("scope").addEventListener("change", function () {
+    state.scope = this.value; save();
+    var v = views.filter(function (x) { return !$("view-" + x).hidden; })[0];
+    show(v);
+  });
+  function renderDecks() {
+    renderScope();
+    $("decks").innerHTML = DECKS.map(function (d) {
+      var ws = deckWords(d.id), added = ws.length > 0;
+      var done = ws.filter(function (w) { return w.box >= 5; }).length;
+      return '<div class="deck"><h3>' + esc(d.name) + ' <span class="mono muted">' + d.words.length + '단어</span></h3>' +
+        '<p>' + esc(d.desc) + (added ? ' · 암기 완료 ' + done + '/' + ws.length : '') + '</p>' +
+        '<button class="btn small ' + (added ? '' : 'primary') + '" data-deck="' + d.id + '" data-added="' + (added ? 1 : 0) + '">' + (added ? '빼기' : '추가') + '</button>' +
+        (added ? '<div class="bar"><div style="width:' + (done / ws.length * 100) + '%"></div></div>' : '') + '</div>';
+    }).join("");
+  }
+  $("decks").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-deck]"); if (!b) return;
+    var id = b.dataset.deck, d = deckById(id);
+    if (b.dataset.added === "1") {
+      confirmStep(b, "빼기", function () {
+        state.words = state.words.filter(function (w) { return w.deck !== id; });
+        save(); renderList(); toast("‘" + d.name + "’ 단어장을 뺐어요");
+      });
+    } else {
+      var n = addDeck(id);
+      state.scope = id; save(); renderList();
+      toast("‘" + d.name + "’ " + n + "단어를 추가했어요. 공부 범위를 이 단어장으로 바꿨어요.");
+    }
   });
 
   var startTab = "cards";
