@@ -9,9 +9,9 @@
  *   4. Plays the solution by posting WM_LBUTTONDOWN/UP to the game window
  *      (the real mouse cursor is not moved).
  *
- * The game marks a game as "assisted" when Search/Undo is used and then does not save
- * the record to the rank file. This tool sets that same flag, so automated games are
- * never recorded in the local ranking or offered for the world ranking.
+ * The game marks a game as "assisted" when Search/Undo is used: the elapsed time is shown
+ * with a '*' and the record is not saved to the rank file. With the "* 표시" option this
+ * tool sets that same flag; it is off by default.
  *
  * Offsets below were taken from Sisen.exe 2.13 (image base 0x400000, no relocations).
  */
@@ -289,12 +289,14 @@ static void click_cell(game_t *g, const snapshot_t *s, int cell)
 #define IDC_DELAY   103
 #define IDC_STATUS  104
 #define IDC_RETRY   105
+#define IDC_MARK    106
 
 static HWND g_main;
 static volatile int g_cancel;
 static HANDLE g_thread;
 static int g_delay_ms = 120;
 static int g_auto_retry = 1;
+static int g_mark_assisted = 0;
 
 static void status(const wchar_t *fmt, ...)
 {
@@ -411,8 +413,12 @@ static DWORD WINAPI worker(LPVOID unused)
             status(L"이미 모든 패가 제거되어 있습니다. F2로 새 게임을 시작한 뒤 다시 눌러 주세요.");
             break;
         }
-        /* Same flag the game sets for Search/Undo: this game is not saved to the ranking. */
-        if (!s.assisted && !mark_assisted(&g)) {
+        /*
+         * Optional: the same flag the game sets for Search/Undo. The elapsed time is then
+         * shown with a '*' and the game is not saved to the ranking. The game clears the
+         * flag itself on a new game; this tool never clears it.
+         */
+        if (g_mark_assisted && !s.assisted && !mark_assisted(&g)) {
             status(L"랭킹 제외 플래그를 쓸 수 없어 중단합니다. (권한 문제일 수 있습니다)");
             break;
         }
@@ -484,7 +490,7 @@ static DWORD WINAPI worker(LPVOID unused)
             sleep_cancellable(300);
             read_snapshot(&g, &s);
             if (solved) {
-                status(L"완료! 모든 패를 제거했습니다. (자동 풀이 게임은 랭킹에 기록되지 않습니다)");
+                status(L"완료! 모든 패를 제거했습니다.");
             } else {
                 status(L"더 이상 제거할 수 있는 패가 없습니다. 남은 패 %d개.", count_tiles(s.board));
             }
@@ -501,7 +507,7 @@ static DWORD WINAPI worker(LPVOID unused)
 
 /* ---- UI ------------------------------------------------------------------------- */
 
-static HWND g_btn_start, g_btn_stop, g_edit_delay, g_status, g_chk_retry;
+static HWND g_btn_start, g_btn_stop, g_edit_delay, g_status, g_chk_retry, g_chk_mark;
 
 static void set_running(int running)
 {
@@ -509,6 +515,7 @@ static void set_running(int running)
     EnableWindow(g_btn_stop, running);
     EnableWindow(g_edit_delay, !running);
     EnableWindow(g_chk_retry, !running);
+    EnableWindow(g_chk_mark, !running);
 }
 
 static HWND make(const wchar_t *cls, const wchar_t *text, DWORD style, int x, int y, int w, int h,
@@ -538,10 +545,12 @@ static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         g_chk_retry = make(L"BUTTON", L"풀 수 없는 배치면 자동으로 새 게임", BS_AUTOCHECKBOX,
                            180, 42, 240, 20, hwnd, IDC_RETRY, font);
         SendMessageW(g_chk_retry, BM_SETCHECK, BST_CHECKED, 0);
-        g_btn_start = make(L"BUTTON", L"자동 풀기", BS_DEFPUSHBUTTON, 12, 76, 120, 30, hwnd,
+        g_chk_mark = make(L"BUTTON", L"경과 시간에 * 표시 (랭킹에 기록 안 함)", BS_AUTOCHECKBOX,
+                          12, 70, 400, 20, hwnd, IDC_MARK, font);
+        g_btn_start = make(L"BUTTON", L"자동 풀기", BS_DEFPUSHBUTTON, 12, 100, 120, 30, hwnd,
                            IDC_START, font);
-        g_btn_stop = make(L"BUTTON", L"중지", 0, 140, 76, 80, 30, hwnd, IDC_STOP, font);
-        g_status = make(L"STATIC", L"대기 중", SS_LEFT, 12, 118, 400, 40, hwnd, IDC_STATUS, font);
+        g_btn_stop = make(L"BUTTON", L"중지", 0, 140, 100, 80, 30, hwnd, IDC_STOP, font);
+        g_status = make(L"STATIC", L"대기 중", SS_LEFT, 12, 142, 400, 40, hwnd, IDC_STATUS, font);
         set_running(0);
         return 0;
     }
@@ -555,6 +564,7 @@ static LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             if (g_delay_ms > 5000)
                 g_delay_ms = 5000;
             g_auto_retry = SendMessageW(g_chk_retry, BM_GETCHECK, 0, 0) == BST_CHECKED;
+            g_mark_assisted = SendMessageW(g_chk_mark, BM_GETCHECK, 0, 0) == BST_CHECKED;
             g_cancel = 0;
             g_thread = CreateThread(NULL, 1 << 20, worker, NULL, 0, NULL);
             if (g_thread)
@@ -597,7 +607,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
 {
     WNDCLASSW wc;
     MSG m;
-    RECT rc = { 0, 0, 430, 170 };
+    RECT rc = { 0, 0, 430, 194 };
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     (void)prev; (void)cmd;
 
