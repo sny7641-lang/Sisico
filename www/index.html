@@ -51,6 +51,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { min-height: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
@@ -203,6 +204,9 @@ details[open] summary { margin-bottom: 10px; }
 .results mark { background: var(--marker); color: #13242b; border-radius: 2px; padding: 0 1px; }
 .results .more { display: flex; flex-direction: column; gap: 8px; padding: 0 2px 14px; }
 .results .more .example { font-size: 16px; }
+.naver-box { display: flex; flex-direction: column; gap: 8px; background: var(--paper); border: 1px solid var(--accent); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.naver-box .nv-title { margin: 0; font-weight: 500; }
+.naver-box textarea { padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
 .dict-ko { margin: 0; font-size: 15px; }
 .senses { margin: 0; padding-left: 20px; font-size: 16px; font-weight: 500; display: flex; flex-direction: column; gap: 2px; }
 .senses li { border: 0; }
@@ -270,6 +274,17 @@ a.btn.primary { color: var(--accent-ink); }
       <input class="search" id="q" type="search" placeholder="영어 단어나 한국어 뜻을 입력하세요" aria-label="단어 검색" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
       <p class="muted search-meta" id="q-meta"></p>
     </div>
+    <form class="naver-box" id="nv-box" hidden>
+      <p class="nv-title">네이버 사전에서 본 <b id="nv-word"></b> 뜻 넣기</p>
+      <p class="muted" style="margin:0;font-size:13px" id="nv-hint"></p>
+      <textarea id="nv-text" rows="2" placeholder="네이버 사전에서 복사한 뜻을 여기에 붙여넣으세요" aria-label="뜻"></textarea>
+      <div class="row">
+        <button class="btn small primary" type="submit">내 단어에 저장</button>
+        <button class="btn small" type="button" id="nv-paste">붙여넣기</button>
+        <button class="btn small" type="button" id="nv-again">네이버 다시 열기</button>
+        <button class="btn small" type="button" id="nv-cancel">닫기</button>
+      </div>
+    </form>
     <ul class="results" id="q-results"></ul>
   </section>
 
@@ -335,7 +350,7 @@ a.btn.primary { color: var(--accent-ink); }
           <p><b>예문</b>: 한국어 번역이 함께 나오는 예문은 <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> 문장입니다 (CC BY 2.0 FR, manythings.org 정리본). 나머지 예문과 모든 단어의 한국어 뜻은 앱에서 직접 작성했습니다.</p>
           <p><b>일상 회화</b>: 자주 쓰는 표현을 직접 골라 정리했습니다.</p>
           <p><b>Claude 사전</b>: 검색 탭에서 Claude에게 물어본 단어의 뜻·예문은 Anthropic의 Claude가 만든 것이며 틀릴 수 있습니다. 한 번 찾은 단어는 기기에 저장됩니다.</p>
-          <p><b>검색 사전</b>: 한국어 위키낱말사전의 영어 표제어 뜻풀이 약 1만 5천 개(가장 먼저 보여 줌), 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>)의 한국어 번역 약 2만 6천 개(둘 다 <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻과 <a href="https://mymemory.translated.net" target="_blank" rel="noopener">MyMemory</a>의 한국어 기계 번역을 무료로 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
+          <p><b>검색 사전</b>: 한국어 위키낱말사전의 영어 표제어 뜻풀이 약 1만 5천 개(가장 먼저 보여 줌), 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>)의 한국어 번역 약 2만 6천 개(둘 다 <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻과 <a href="https://mymemory.translated.net" target="_blank" rel="noopener">MyMemory</a>의 한국어 기계 번역을 무료로 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 앱 안에서 열고, 거기서 직접 복사한 뜻을 내 단어로 저장할 수 있게 합니다 (자동으로 가져오지는 않습니다).</p>
         </div>
       </details>
     </div>
@@ -911,7 +926,7 @@ a.btn.primary { color: var(--accent-ink); }
     if (!html) {
       html = '<li class="empty" style="border:1px dashed var(--line);margin-top:8px"><h2>‘' + esc(raw) + '’ 없음</h2>' +
         '<p class="muted">앱 안의 사전에 없는 말이에요.</p><div class="row" style="justify-content:center">' +
-        '<a class="btn" href="' + naverUrl(raw) + '" target="_blank" rel="noopener">네이버 사전에서 보기</a></div></li>';
+        '<button class="btn" data-naver="' + esc(raw) + '">네이버 사전에서 보기</button></div></li>';
     }
     ul.innerHTML = html;
   }
@@ -937,7 +952,7 @@ a.btn.primary { color: var(--accent-ink); }
         (chips ? '<div class="chips">' + chips + '</div>' : '') +
         '<div class="row"><button class="btn small" data-say="' + esc(it.word) + '">발음 듣기</button>' +
         (st.length ? '' : '<button class="btn small primary" data-add="' + esc(it.key) + '">내 단어에 추가</button>') +
-        '<a class="btn small" href="' + naverUrl(it.word) + '" target="_blank" rel="noopener">네이버 사전</a></div>' +
+        '<button class="btn small" data-naver="' + esc(it.word) + '">네이버 사전</button></div>' +
       '</div>';
     }
     return '<li><button class="hit" data-k="' + esc(it.key) + '" aria-expanded="' + open + '">' +
@@ -945,6 +960,72 @@ a.btn.primary { color: var(--accent-ink); }
       '<span class="hs' + (st.length ? " on" : "") + '">' + status + '</span>' +
       '<span class="hm">' + (korean ? mark(it.meaning, q) : esc(it.meaning)) + '</span></button>' + more + '</li>';
   }
+  /* ---------- Naver dictionary: open it inside the app, then save the meaning the user copied ---------- */
+  function capPlugin(name) {
+    var C = window.Capacitor;
+    if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+    return (C.Plugins && C.Plugins[name]) || (C.registerPlugin ? C.registerPlugin(name) : null);
+  }
+  var nvWord = null, nvBefore = "", nvAwaiting = false;
+  function readClipboard() {
+    var cb = capPlugin("Clipboard");
+    if (cb) return cb.read().then(function (r) { return (r && r.type && r.type.indexOf("text") >= 0 && r.value) || ""; }).catch(function () { return ""; });
+    // In a normal browser reading the clipboard needs a tap on the 붙여넣기 button
+    if (navigator.clipboard && navigator.clipboard.readText) return navigator.clipboard.readText().catch(function () { return ""; });
+    return Promise.resolve("");
+  }
+  function cleanMeaning(t) {
+    return String(t || "").replace(/\s+/g, " ").replace(/^\d+\.\s*/, "").trim().slice(0, 200);
+  }
+  function openNaver(word) {
+    nvWord = word; nvAwaiting = true;
+    $("nv-word").textContent = "‘" + word + "’"; $("nv-text").value = "";
+    $("nv-hint").textContent = "네이버 사전에서 뜻을 길게 눌러 복사한 뒤 돌아오세요.";
+    $("nv-box").hidden = false;
+    var go = function () {
+      var br = capPlugin("Browser");
+      if (br) br.open({ url: naverUrl(word), presentationStyle: "popover" }).catch(function () { window.open(naverUrl(word), "_blank"); });
+      else window.open(naverUrl(word), "_blank", "noopener");
+    };
+    // Remember what was on the clipboard so an old copy isn't mistaken for the new one
+    var cb = capPlugin("Clipboard");
+    if (cb) readClipboard().then(function (t) { nvBefore = t; go(); }); else { nvBefore = ""; go(); }
+  }
+  function naverReturned() {
+    if (!nvAwaiting || !nvWord) return;
+    nvAwaiting = false;
+    setTimeout(function () {
+      if (!capPlugin("Clipboard")) { $("nv-hint").textContent = "복사한 뜻을 아래에 붙여넣으세요."; return; }
+      readClipboard().then(function (t) {
+        t = cleanMeaning(t);
+        if (t && t !== cleanMeaning(nvBefore) && t.toLowerCase() !== nvWord.toLowerCase()) {
+          $("nv-text").value = t; $("nv-hint").textContent = "복사한 내용을 가져왔어요. 고친 뒤 저장할 수 있어요.";
+        } else $("nv-hint").textContent = "복사한 내용이 없어요. 뜻을 직접 쓰거나 붙여넣으세요.";
+      });
+    }, 350);
+  }
+  (function () {
+    var br = capPlugin("Browser");
+    if (br && br.addListener) br.addListener("browserFinished", naverReturned);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) naverReturned(); });
+    window.addEventListener("focus", naverReturned);
+    $("nv-paste").addEventListener("click", function () {
+      readClipboard().then(function (t) { t = cleanMeaning(t); if (t) $("nv-text").value = t; else toast("붙여넣을 내용이 없어요. 칸을 길게 눌러 붙여넣어 보세요."); });
+    });
+    $("nv-again").addEventListener("click", function () { if (nvWord) openNaver(nvWord); });
+    $("nv-cancel").addEventListener("click", function () { $("nv-box").hidden = true; nvWord = null; nvAwaiting = false; });
+    $("nv-box").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var m = cleanMeaning($("nv-text").value); if (!nvWord) return;
+      if (!m) { toast("뜻을 먼저 넣어 주세요"); return; }
+      var k = nvWord.toLowerCase();
+      var own = state.words.filter(function (w) { return !w.deck && w.word.toLowerCase() === k; })[0];
+      if (own) own.meaning = m; else state.words.push(makeWord(nvWord, "", m, ""));
+      save(); $("nv-box").hidden = true; toast("‘" + nvWord + "’ " + (own ? "뜻을 바꿨어요" : "내 단어에 저장했어요"));
+      nvWord = null; renderStats(); renderSearch();
+    });
+  })();
+
   /* ---------- Ask Claude ---------- */
   var CKEY = "sisico-claude-v1", asking = {};
   function claudeCfg() {
@@ -1032,13 +1113,14 @@ a.btn.primary { color: var(--accent-ink); }
       (o.ko ? '<p class="muted" style="margin:0;font-size:13px">한국어 뜻은 기계 번역이라 어색하거나 틀릴 수 있어요. 정확한 뜻은 네이버 사전에서 확인하세요.</p>' : '') +
       '<div class="row"><button class="btn small" data-say="' + esc(q) + '">발음 듣기</button>' +
       (o.ko && !st.length ? '<button class="btn small primary" data-addonline="' + esc(q) + '">내 단어에 추가</button>' : '') +
-      '<a class="btn small" href="' + naverUrl(q) + '" target="_blank" rel="noopener">네이버 사전</a></div></div></li>';
+      '<button class="btn small" data-naver="' + esc(q) + '">네이버 사전</button></div></div></li>';
   }
   var qTimer;
   $("q").addEventListener("input", function () { openKey = null; clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 60); });
   $("q-results").addEventListener("click", function (e) {
     var t = e.target.closest("button"); if (!t) return;
     if (t.dataset.say) { speak(t.dataset.say); return; }
+    if (t.dataset.naver) { openNaver(t.dataset.naver); return; }
     if (t.dataset.ask) { askClaude(t.dataset.ask); return; }
     if (t.dataset.addonline) {
       var w = t.dataset.addonline, o = online[w]; if (!o || !o.ko) return;
