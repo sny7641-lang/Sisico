@@ -10,6 +10,7 @@
   - 토익 빈출 1,250 — TOEIC Service List 1.2
   - 일상 회화 153 — 직접 정리
 - **검색**: 입력하는 즉시 영어 철자나 한국어 뜻으로 검색. 앱 단어장 4,600여 개 + 오프라인 영한사전 약 9만 5천 개(Wiktionary + Kengdic). 사전에도 없으면 인터넷으로 영영 뜻(Free Dictionary API)을 가져오고, 네이버 사전 바로가기 제공.
+- **Claude 사전**: 사전에 없는 단어는 검색 탭에서 Claude에게 물어 뜻·예문을 받아 기기에 저장. 본인 Anthropic API 키 필요(단어장 탭 → Claude 사전 설정). 코드: `src/claude-lookup.js` → `npm run build:claude` → `www/claude-lookup.js`.
 - **단어장**: 단어 추가·검색·삭제, `단어, 뜻` 형식으로 여러 줄 붙여넣기.
 - 발음 듣기, 연속 학습일, 다크 모드. 데이터는 기기 안에 저장됩니다.
 

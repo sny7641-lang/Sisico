@@ -6,15 +6,18 @@
   "scripts": {
     "android:add": "cap add android",
     "android:sync": "cap sync android",
-    "android:icons": "capacitor-assets generate --android --iconBackgroundColor '#0f6b66' --splashBackgroundColor '#e9efee'"
+    "android:icons": "capacitor-assets generate --android --iconBackgroundColor '#0f6b66' --splashBackgroundColor '#e9efee'",
+    "build:claude": "esbuild src/claude-lookup.js --bundle --minify --format=iife --global-name=SisicoClaude --target=es2020 --outfile=www/claude-lookup.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@capacitor-community/text-to-speech": "4.1.1",
     "@capacitor/android": "6.2.1",
     "@capacitor/core": "6.2.1"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",
-    "@capacitor/cli": "6.2.1"
+    "@capacitor/cli": "6.2.1",
+    "esbuild": "^0.28.2"
   }
 }
