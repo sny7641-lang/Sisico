@@ -204,6 +204,8 @@ details[open] summary { margin-bottom: 10px; }
 .results .more { display: flex; flex-direction: column; gap: 8px; padding: 0 2px 14px; }
 .results .more .example { font-size: 16px; }
 .dict-ko { margin: 0; font-size: 15px; }
+.senses { margin: 0; padding-left: 20px; font-size: 16px; font-weight: 500; display: flex; flex-direction: column; gap: 2px; }
+.senses li { border: 0; }
 .dict-ko .src { font-family: var(--f-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 1px; }
 .defs li { border: 0; }
 .defs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
@@ -333,7 +335,7 @@ a.btn.primary { color: var(--accent-ink); }
           <p><b>예문</b>: 한국어 번역이 함께 나오는 예문은 <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> 문장입니다 (CC BY 2.0 FR, manythings.org 정리본). 나머지 예문과 모든 단어의 한국어 뜻은 앱에서 직접 작성했습니다.</p>
           <p><b>일상 회화</b>: 자주 쓰는 표현을 직접 골라 정리했습니다.</p>
           <p><b>Claude 사전</b>: 검색 탭에서 Claude에게 물어본 단어의 뜻·예문은 Anthropic의 Claude가 만든 것이며 틀릴 수 있습니다. 한 번 찾은 단어는 기기에 저장됩니다.</p>
-          <p><b>검색 사전</b>: 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)의 한국어 번역 약 2만 6천 개와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻과 <a href="https://mymemory.translated.net" target="_blank" rel="noopener">MyMemory</a>의 한국어 기계 번역을 무료로 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
+          <p><b>검색 사전</b>: 한국어 위키낱말사전의 영어 표제어 뜻풀이 약 1만 5천 개(가장 먼저 보여 줌), 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>)의 한국어 번역 약 2만 6천 개(둘 다 <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻과 <a href="https://mymemory.translated.net" target="_blank" rel="noopener">MyMemory</a>의 한국어 기계 번역을 무료로 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
         </div>
       </details>
     </div>
@@ -830,9 +832,12 @@ a.btn.primary { color: var(--accent-ink); }
   }
   function prepDict() {
     DICT = (window.SISICO_DICTIONARY || []).map(function (r) {
-      var ko = [r[3], r[4]].filter(Boolean).join("; ");
-      return { word: r[0], key: r[0].toLowerCase(), pos: r[1], ipa: r[2], wk: r[3], kd: r[4], gloss: r[5],
-               meaning: ko.split("; ").slice(0, 4).join(", "), ko: ko.toLowerCase(), dict: true, decks: [] };
+      // Best source first: Korean Wiktionary definitions, then English Wiktionary translations.
+      // Kengdic is a Korean-English dictionary read backwards, so its senses are often rare ones; it is a last resort.
+      var kw = r[6] || "", ko = [kw, r[3], r[4]].filter(Boolean).join("; ");
+      var best = kw || r[3] || r[4];
+      return { word: r[0], key: r[0].toLowerCase(), pos: r[1], ipa: r[2], kw: kw, wk: r[3], kd: r[4], gloss: r[5], weak: !kw && !r[3],
+               meaning: best.split("; ").slice(0, 4).join(", "), ko: ko.toLowerCase(), dict: true, decks: [] };
     });
   }
   function appItems() {
@@ -890,7 +895,7 @@ a.btn.primary { color: var(--accent-ink); }
     (DICT || []).forEach(function (it) {
       if (seen[it.key]) return;
       var sc = korean ? scoreKo(it.ko, q) : scoreEn(it.key, q);
-      if (sc >= 0) hits.push([sc + (it.wk ? 0 : 0.1) + (it.key.indexOf(" ") > 0 ? 0.3 : 0), it]);
+      if (sc >= 0) hits.push([sc + (it.weak ? 0.4 : 0) + (it.key.indexOf(" ") > 0 ? 0.3 : 0), it]);
     });
     hits.sort(function (a, b) { return a[0] - b[0] || a[1].key.length - b[1].key.length || (a[1].key < b[1].key ? -1 : 1); });
     lastHits = hits.slice(0, 60).map(function (h) { return h[1]; });
@@ -899,7 +904,8 @@ a.btn.primary { color: var(--accent-ink); }
     var exact = hits.length && hits[0][1].key === q;
     var html = lastHits.map(renderHit).join("");
     var english = !korean && /^[a-z][a-z' -]*$/.test(q);
-    if (english && !exact) html = renderOnline(q) + html;
+    // Also look online when the only offline entry is a weak Kengdic one
+    if (english && (!exact || hits[0][1].weak)) html = renderOnline(q) + html;
     // Offer Claude unless the word is already a full entry (deck word, own word or an earlier Claude answer)
     if (english && !(exact && hits[0][1].app) && claudeCfg().key) html = renderAsk(q) + html;
     if (!html) {
@@ -921,8 +927,10 @@ a.btn.primary { color: var(--accent-ink); }
     if (open) {
       more = '<div class="more">' +
         (it.ipa ? '<p class="mono muted" style="margin:0">' + esc(it.ipa) + '</p>' : '') +
-        (it.dict && it.wk ? '<p class="dict-ko"><span class="src">위키낱말사전</span>' + esc(it.wk.split("; ").join(", ")) + '</p>' : '') +
-        (it.dict && it.kd ? '<p class="dict-ko"><span class="src">Kengdic</span>' + esc(it.kd.split("; ").join(", ")) + '</p>' : '') +
+        (it.dict && it.kw ? '<ol class="senses">' + it.kw.split("; ").map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + '</ol>' : '') +
+        (it.dict && it.wk ? '<p class="dict-ko"><span class="src">번역어</span>' + esc(it.wk.split("; ").join(", ")) + '</p>' : '') +
+        (it.dict && it.kd ? '<p class="dict-ko muted"><span class="src">참고 · Kengdic</span>' + esc(it.kd.split("; ").join(", ")) +
+          (it.weak ? '<br><span style="font-size:12px">이 사전은 드문 뜻이 앞에 나올 수 있어요. 네이버 사전으로 확인해 보세요.</span>' : '') + '</p>' : '') +
         (it.gloss ? '<p class="example-ko" lang="en">' + esc(it.gloss) + '</p>' : '') +
         (it.example ? '<p class="example">' + highlight(it.example, it.word) + '</p>' : '') +
         (it.exampleKo ? '<p class="example-ko">' + esc(it.exampleKo) + '</p>' : '') +

@@ -47,6 +47,7 @@ cd android && ./gradlew assembleDebug   # Android SDK 필요
 | `data/sources/tatoeba_eng_kor.tsv` | 영어–한국어 예문 쌍 | Tatoeba (manythings.org 정리본) — CC BY 2.0 FR |
 | `data/dict/*.tsv` | 한국어 뜻, Tatoeba에 없는 단어의 예문 | 직접 작성 |
 
+| `data/dictionary/kowiktionary_en.jsonl` | 검색용 영한사전 1순위 (한국어 위키낱말사전의 영어 표제어) | 한국어 Wiktionary, kaikki.org 추출 — CC BY-SA 4.0 |
 | `data/dictionary/wiktionary_en_ko.jsonl` | 검색용 영한사전 (한국어 번역이 있는 영어 표제어) | English Wiktionary, kaikki.org 추출 — CC BY-SA 4.0 (`tools/filter_wiktionary.py`) |
 | `data/dictionary/kengdic.tsv` | 검색용 한영사전 (영어 뜻으로 거꾸로 색인) | Kengdic (Joe Speigle) — MPL 2.0 / LGPL 2.0+ |
 
