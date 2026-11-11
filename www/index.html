@@ -203,6 +203,12 @@ details[open] summary { margin-bottom: 10px; }
 .results mark { background: var(--marker); color: #13242b; border-radius: 2px; padding: 0 1px; }
 .results .more { display: flex; flex-direction: column; gap: 8px; padding: 0 2px 14px; }
 .results .more .example { font-size: 16px; }
+.dict-ko { margin: 0; font-size: 15px; }
+.dict-ko .src { font-family: var(--f-mono); font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 1px; }
+.defs li { border: 0; }
+.defs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+a.btn { text-decoration: none; color: inherit; display: inline-block; }
+a.btn.primary { color: var(--accent-ink); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--muted); }
 .section-title { margin: 6px 0 0; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
@@ -308,6 +314,7 @@ details[open] summary { margin-bottom: 10px; }
           <p><b>토익 빈출</b>: <a href="https://www.newgeneralservicelist.com/toeic-service-list" target="_blank" rel="noopener">TOEIC Service List 1.2</a> (Browne, C. &amp; Culligan, B., CC BY-SA 4.0). 토익 지문 말뭉치에서 자주 쓰인 순서입니다.</p>
           <p><b>예문</b>: 한국어 번역이 함께 나오는 예문은 <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> 문장입니다 (CC BY 2.0 FR, manythings.org 정리본). 나머지 예문과 모든 단어의 한국어 뜻은 앱에서 직접 작성했습니다.</p>
           <p><b>일상 회화</b>: 자주 쓰는 표현을 직접 골라 정리했습니다.</p>
+          <p><b>검색 사전</b>: 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)의 한국어 번역 약 2만 6천 개와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻을 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
         </div>
       </details>
     </div>
@@ -774,98 +781,167 @@ details[open] summary { margin-bottom: 10px; }
     }
   });
 
-  /* ---------- Live search over every built-in word and your own words ---------- */
-  var INDEX = null;
+  /* ---------- Live search ----------
+     1) words in the app's decks and your own words (curated meanings and examples)
+     2) dictionary.js: ~95,000 English-Korean entries (Wiktionary + Kengdic), loaded on first use
+     3) when nothing matches offline: English definitions from dictionaryapi.dev (needs internet) */
+  var INDEX = null, DICT = null, dictLoading = false;
   function buildIndex() {
     var map = {};
     DECKS.forEach(function (d) {
       d.words.forEach(function (word) {
         var k = word.toLowerCase(), e = d.dict[k]; if (!e) return;
-        var it = map[k] || (map[k] = { word: word, key: k, pos: e[0], meaning: e[1], example: e[2], exampleKo: e[3], decks: [], years: 0 });
+        var it = map[k] || (map[k] = { word: word, key: k, pos: e[0], meaning: e[1], example: e[2], exampleKo: e[3], decks: [], years: 0, app: true });
         it.decks.push(d.id);
         if (d.years && d.years[k]) it.years = d.years[k];
       });
     });
     INDEX = Object.keys(map).map(function (k) { return map[k]; });
   }
-  function searchItems() {
+  function loadDictionary() {
+    if (DICT || dictLoading) return;
+    if (window.SISICO_DICTIONARY) { prepDict(); return; }
+    dictLoading = true;
+    var sc = document.createElement("script");
+    sc.src = "dictionary.js";
+    sc.onload = function () { dictLoading = false; prepDict(); renderSearch(); };
+    sc.onerror = function () { dictLoading = false; renderSearch(); };
+    document.head.appendChild(sc);
+  }
+  function prepDict() {
+    DICT = (window.SISICO_DICTIONARY || []).map(function (r) {
+      var ko = [r[3], r[4]].filter(Boolean).join("; ");
+      return { word: r[0], key: r[0].toLowerCase(), pos: r[1], ipa: r[2], wk: r[3], kd: r[4], gloss: r[5],
+               meaning: ko.split("; ").slice(0, 4).join(", "), ko: ko.toLowerCase(), dict: true, decks: [] };
+    });
+  }
+  function appItems() {
     if (!INDEX) buildIndex();
     var items = INDEX.slice(), seen = {};
     INDEX.forEach(function (it) { seen[it.key] = 1; });
     state.words.forEach(function (w) {
       if (w.deck) return;
       var k = w.word.toLowerCase(); if (seen[k]) return;
-      items.push({ word: w.word, key: k, pos: w.pos, meaning: w.meaning, example: w.example, exampleKo: "", decks: [], years: 0, mine: true });
+      items.push({ word: w.word, key: k, pos: w.pos, meaning: w.meaning, example: w.example, exampleKo: "", decks: [], years: 0, mine: true, app: true });
     });
     return items;
   }
   function mark(text, q) {
-    var t = String(text), i = t.toLowerCase().indexOf(q);
+    var t = String(text || ""), i = t.toLowerCase().indexOf(q);
     if (!q || i < 0) return esc(t);
     return esc(t.slice(0, i)) + "<mark>" + esc(t.slice(i, i + q.length)) + "</mark>" + esc(t.slice(i + q.length));
   }
-  function studying(key) {
-    return state.words.filter(function (w) { return w.word.toLowerCase() === key; });
+  function studying(key) { return state.words.filter(function (w) { return w.word.toLowerCase() === key; }); }
+  function scoreEn(key, q) {
+    if (key === q) return 0;
+    if (key.indexOf(q) === 0) return 1;
+    if (key.indexOf(q) > 0) return 3;
+    return -1;
   }
-  var openKey = null;
+  function scoreKo(text, q) {
+    if (!text || text.indexOf(q) < 0) return -1;
+    return text.split(/[,;/·()]\s*/).some(function (x) { return x.trim() === q; }) ? 1.5 : 2;
+  }
+  function naverUrl(word) { return "https://en.dict.naver.com/#/search?query=" + encodeURIComponent(word); }
+  var openKey = null, lastHits = [], online = {};
+  function findItem(key) { return lastHits.filter(function (x) { return x.key === key; })[0]; }
   function renderSearch() {
-    var q = $("q").value.trim().toLowerCase();
-    var items = searchItems(), ul = $("q-results"), meta = $("q-meta");
+    var raw = $("q").value.trim(), q = raw.toLowerCase();
+    var ul = $("q-results"), meta = $("q-meta");
+    if (!DICT) loadDictionary();
+    if (!INDEX) buildIndex();
     if (!q) {
-      meta.textContent = "단어 " + items.length.toLocaleString() + "개 중에서 바로 찾아요. 추가하지 않은 단어장도 검색됩니다.";
-      ul.innerHTML = ""; return;
+      meta.textContent = DICT ? "영어 단어 " + (DICT.length + INDEX.length).toLocaleString() + "개에서 바로 찾아요. 한국어 뜻으로도 검색됩니다."
+                              : (dictLoading ? "사전을 불러오는 중이에요…" : "");
+      ul.innerHTML = ""; lastHits = []; return;
     }
-    var korean = /[\u3131-\uD79D]/.test(q), hits = [];
-    items.forEach(function (it) {
-      var w = it.key, m = (it.meaning || "").toLowerCase(), score = -1;
-      if (!korean) {
-        if (w === q) score = 0;
-        else if (w.indexOf(q) === 0) score = 1;
-        else if (w.indexOf(q) > 0) score = 3;
-      }
-      if (score < 0 && m.indexOf(q) >= 0) {
-        // Exact sense match ("버리다" in "버리다, 포기하다") ranks above a partial one
-        score = m.split(/[,/·()]\s*/).some(function (x) { return x.trim() === q; }) ? 1.5 : 2;
-      }
-      if (score >= 0) hits.push([score, it]);
+    var korean = /[ㄱ-힝]/.test(q), hits = [], seen = {};
+    appItems().forEach(function (it) {
+      var sc = korean ? scoreKo((it.meaning || "").toLowerCase(), q) : scoreEn(it.key, q);
+      if (!korean && sc < 0) { var m = scoreKo((it.meaning || "").toLowerCase(), q); if (m >= 0) sc = m; }
+      if (sc >= 0) { hits.push([sc - 0.2, it]); seen[it.key] = 1; }
+    });
+    (DICT || []).forEach(function (it) {
+      if (seen[it.key]) return;
+      var sc = korean ? scoreKo(it.ko, q) : scoreEn(it.key, q);
+      if (sc >= 0) hits.push([sc + (it.wk ? 0 : 0.1) + (it.key.indexOf(" ") > 0 ? 0.3 : 0), it]);
     });
     hits.sort(function (a, b) { return a[0] - b[0] || a[1].key.length - b[1].key.length || (a[1].key < b[1].key ? -1 : 1); });
-    var shown = hits.slice(0, 60);
-    meta.textContent = hits.length ? hits.length + "개 찾음" + (hits.length > shown.length ? " · 위에서 " + shown.length + "개" : "") : "";
-    if (!hits.length) {
-      ul.innerHTML = '<li class="empty" style="border:1px dashed var(--line);margin-top:8px"><h2>‘' + esc($("q").value.trim()) + '’ 없음</h2>' +
-        '<p class="muted">기본 단어장에 없는 단어예요. 뜻을 알면 내 단어로 직접 넣을 수 있어요.</p>' +
-        (korean ? '' : '<button class="btn primary" id="q-add-own">내 단어로 추가</button>') + '</li>';
-      var b = $("q-add-own");
-      if (b) b.onclick = function () { var v = $("q").value.trim(); show("list"); $("f-word").value = v; try { $("f-meaning").focus(); } catch (e) {} };
-      return;
+    lastHits = hits.slice(0, 60).map(function (h) { return h[1]; });
+    meta.textContent = (hits.length ? hits.length.toLocaleString() + "개 찾음" + (hits.length > lastHits.length ? " · 위에서 " + lastHits.length + "개" : "") : "") +
+      (dictLoading ? " · 큰 사전을 불러오는 중…" : "");
+    var exact = hits.length && hits[0][1].key === q;
+    var html = lastHits.map(renderHit).join("");
+    if (!korean && !exact && /^[a-z][a-z' -]*$/.test(q)) html = renderOnline(q) + html;
+    if (!html) {
+      html = '<li class="empty" style="border:1px dashed var(--line);margin-top:8px"><h2>‘' + esc(raw) + '’ 없음</h2>' +
+        '<p class="muted">앱 안의 사전에 없는 말이에요.</p><div class="row" style="justify-content:center">' +
+        '<a class="btn" href="' + naverUrl(raw) + '" target="_blank" rel="noopener">네이버 사전에서 보기</a></div></li>';
     }
-    ul.innerHTML = shown.map(function (h) {
-      var it = h[1], st = studying(it.key), open = openKey === it.key;
-      var status = st.length ? "학습 중" + (st[0].box >= 5 ? " · 완료" : " · " + st[0].box + "/5") : "";
-      var chips = it.decks.map(function (id) { var d = deckById(id); return '<span class="chip">' + esc(d ? d.name : id) + '</span>'; }).join("") +
-        (it.mine ? '<span class="chip">내 단어</span>' : "") +
-        (it.years ? '<span class="badge">수능 ' + deckById("csat").yearsTotal + '개년 중 ' + it.years + '개년</span>' : "");
-      return '<li><button class="hit" data-k="' + esc(it.key) + '" aria-expanded="' + open + '">' +
-        '<span class="hw">' + (korean ? esc(it.word) : mark(it.word, q)) + ' <span class="pos">' + esc(it.pos || "") + '</span></span>' +
-        '<span class="hs' + (st.length ? " on" : "") + '">' + status + '</span>' +
-        '<span class="hm">' + (korean ? mark(it.meaning, q) : esc(it.meaning)) + '</span></button>' +
-        (open ? '<div class="more">' +
-          (it.example ? '<p class="example">' + highlight(it.example, it.word) + '</p>' : '') +
-          (it.exampleKo ? '<p class="example-ko">' + esc(it.exampleKo) + '</p>' : '') +
-          '<div class="chips">' + chips + '</div>' +
-          '<div class="row"><button class="btn small" data-say="' + esc(it.word) + '">발음 듣기</button>' +
-          (st.length ? '' : '<button class="btn small primary" data-add="' + esc(it.key) + '">내 단어에 추가</button>') + '</div>' +
-        '</div>' : '') + '</li>';
-    }).join("");
+    ul.innerHTML = html;
   }
-  $("q").addEventListener("input", function () { openKey = null; renderSearch(); });
+  function renderHit(it) {
+    var q = $("q").value.trim().toLowerCase(), korean = /[ㄱ-힝]/.test(q);
+    var st = studying(it.key), open = openKey === it.key;
+    var status = st.length ? "학습 중" + (st[0].box >= 5 ? " · 완료" : " · " + st[0].box + "/5") : (it.dict ? "사전" : "");
+    var chips = it.decks.map(function (id) { var d = deckById(id); return '<span class="chip">' + esc(d ? d.name : id) + '</span>'; }).join("") +
+      (it.mine ? '<span class="chip">내 단어</span>' : "") +
+      (it.years ? '<span class="badge">수능 ' + deckById("csat").yearsTotal + '개년 중 ' + it.years + '개년</span>' : "");
+    var more = '';
+    if (open) {
+      more = '<div class="more">' +
+        (it.ipa ? '<p class="mono muted" style="margin:0">' + esc(it.ipa) + '</p>' : '') +
+        (it.dict && it.wk ? '<p class="dict-ko"><span class="src">위키낱말사전</span>' + esc(it.wk.split("; ").join(", ")) + '</p>' : '') +
+        (it.dict && it.kd ? '<p class="dict-ko"><span class="src">Kengdic</span>' + esc(it.kd.split("; ").join(", ")) + '</p>' : '') +
+        (it.gloss ? '<p class="example-ko" lang="en">' + esc(it.gloss) + '</p>' : '') +
+        (it.example ? '<p class="example">' + highlight(it.example, it.word) + '</p>' : '') +
+        (it.exampleKo ? '<p class="example-ko">' + esc(it.exampleKo) + '</p>' : '') +
+        (chips ? '<div class="chips">' + chips + '</div>' : '') +
+        '<div class="row"><button class="btn small" data-say="' + esc(it.word) + '">발음 듣기</button>' +
+        (st.length ? '' : '<button class="btn small primary" data-add="' + esc(it.key) + '">내 단어에 추가</button>') +
+        '<a class="btn small" href="' + naverUrl(it.word) + '" target="_blank" rel="noopener">네이버 사전</a></div>' +
+      '</div>';
+    }
+    return '<li><button class="hit" data-k="' + esc(it.key) + '" aria-expanded="' + open + '">' +
+      '<span class="hw">' + (korean ? esc(it.word) : mark(it.word, q)) + ' <span class="pos">' + esc(it.pos || "") + '</span></span>' +
+      '<span class="hs' + (st.length ? " on" : "") + '">' + status + '</span>' +
+      '<span class="hm">' + (korean ? mark(it.meaning, q) : esc(it.meaning)) + '</span></button>' + more + '</li>';
+  }
+  // English definitions from the free dictionary API, for words the offline data doesn't have
+  function renderOnline(q) {
+    var o = online[q];
+    if (o === undefined) {
+      online[q] = null;
+      setTimeout(function () {
+        if ($("q").value.trim().toLowerCase() !== q) { delete online[q]; return; }
+        fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(q))
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (d) { online[q] = Array.isArray(d) ? d : []; if ($("q").value.trim().toLowerCase() === q) renderSearch(); })
+          .catch(function () { online[q] = "offline"; if ($("q").value.trim().toLowerCase() === q) renderSearch(); });
+      }, 400);
+      return "";
+    }
+    if (!o || o === "offline" || !o.length) return "";
+    var e = o[0], defs = [];
+    (e.meanings || []).forEach(function (m) {
+      (m.definitions || []).slice(0, 2).forEach(function (d) { if (defs.length < 4) defs.push('<li><span class="pos">' + esc(m.partOfSpeech || "") + '</span> ' + esc(d.definition) + '</li>'); });
+    });
+    if (!defs.length) return "";
+    return '<li class="online"><div class="more" style="padding-top:12px">' +
+      '<div class="row spread"><span class="hw">' + esc(e.word) + ' <span class="mono muted" style="font-size:13px">' + esc(e.phonetic || "") + '</span></span><span class="chip">영영 사전 · 인터넷</span></div>' +
+      '<p class="muted" style="margin:0;font-size:13px">앱 안의 영한사전에 없어서 영어 뜻을 가져왔어요.</p>' +
+      '<ul class="defs">' + defs.join("") + '</ul>' +
+      '<div class="row"><button class="btn small" data-say="' + esc(e.word) + '">발음 듣기</button>' +
+      '<a class="btn small primary" href="' + naverUrl(e.word) + '" target="_blank" rel="noopener">네이버 사전에서 한국어 뜻 보기</a></div></div></li>';
+  }
+  var qTimer;
+  $("q").addEventListener("input", function () { openKey = null; clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 60); });
   $("q-results").addEventListener("click", function (e) {
     var t = e.target.closest("button"); if (!t) return;
     if (t.dataset.say) { speak(t.dataset.say); return; }
     if (t.dataset.add) {
-      var it = searchItems().filter(function (x) { return x.key === t.dataset.add; })[0]; if (!it) return;
-      state.words.push(makeWord(it.word, it.pos, it.meaning, it.example));
+      var it = findItem(t.dataset.add); if (!it) return;
+      state.words.push(makeWord(it.word, it.pos, it.meaning, it.example || ""));
       save(); renderStats(); renderSearch(); toast("‘" + it.word + "’ 내 단어에 추가했어요");
       return;
     }

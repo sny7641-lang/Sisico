@@ -9,7 +9,7 @@
   - 수능 기출 빈출 1,574 — 2014~2026학년도 수능 영어 13개년 문제지·듣기 대본에서 3개 연도 이상 나온 단어 (초등 단어 제외)
   - 토익 빈출 1,250 — TOEIC Service List 1.2
   - 일상 회화 153 — 직접 정리
-- **검색**: 기본 단어장 전체(추가 안 한 것 포함)와 내 단어를 입력하는 즉시 영어·한국어 뜻으로 검색.
+- **검색**: 입력하는 즉시 영어 철자나 한국어 뜻으로 검색. 앱 단어장 4,600여 개 + 오프라인 영한사전 약 9만 5천 개(Wiktionary + Kengdic). 사전에도 없으면 인터넷으로 영영 뜻(Free Dictionary API)을 가져오고, 네이버 사전 바로가기 제공.
 - **단어장**: 단어 추가·검색·삭제, `단어, 뜻` 형식으로 여러 줄 붙여넣기.
 - 발음 듣기, 연속 학습일, 다크 모드. 데이터는 기기 안에 저장됩니다.
 
@@ -46,4 +46,8 @@ cd android && ./gradlew assembleDebug   # Android SDK 필요
 | `data/sources/tatoeba_eng_kor.tsv` | 영어–한국어 예문 쌍 | Tatoeba (manythings.org 정리본) — CC BY 2.0 FR |
 | `data/dict/*.tsv` | 한국어 뜻, Tatoeba에 없는 단어의 예문 | 직접 작성 |
 
+| `data/dictionary/wiktionary_en_ko.jsonl` | 검색용 영한사전 (한국어 번역이 있는 영어 표제어) | English Wiktionary, kaikki.org 추출 — CC BY-SA 4.0 (`tools/filter_wiktionary.py`) |
+| `data/dictionary/kengdic.tsv` | 검색용 한영사전 (영어 뜻으로 거꾸로 색인) | Kengdic (Joe Speigle) — MPL 2.0 / LGPL 2.0+ |
+
+`python3 tools/build_dictionary.py` 는 검색 사전 `www/dictionary.js` 를 만듭니다.
 `python3 tools/build_decks.py` 를 실행하면 위 자료로 `www/decks.js` 를 다시 만듭니다.
