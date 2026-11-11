@@ -307,9 +307,9 @@ a.btn.primary { color: var(--accent-ink); }
       </details>
 
       <details id="claude-settings">
-        <summary>Claude 사전 설정</summary>
+        <summary>Claude 사전 설정 (선택, 유료)</summary>
         <div class="sources">
-          <p>사전에 없는 단어를 검색 탭에서 Claude에게 물어볼 수 있어요. Anthropic API 키가 필요하고, 쓴 만큼 요금이 나옵니다 (Claude 앱 구독과는 별개).</p>
+          <p>안 써도 됩니다. 검색은 키 없이 무료로 동작해요. 더 정확한 뜻과 예문이 필요할 때만, Anthropic API 키를 넣으면 검색 탭에 ‘Claude에게 물어보기’ 버튼이 생깁니다. 쓴 만큼 요금이 나옵니다 (Claude 앱 구독과는 별개).</p>
         </div>
         <label>API 키<input id="ck-key" type="password" autocomplete="off" placeholder="sk-ant-..."></label>
         <label style="margin-top:10px">모델<select id="ck-model">
@@ -333,7 +333,7 @@ a.btn.primary { color: var(--accent-ink); }
           <p><b>예문</b>: 한국어 번역이 함께 나오는 예문은 <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> 문장입니다 (CC BY 2.0 FR, manythings.org 정리본). 나머지 예문과 모든 단어의 한국어 뜻은 앱에서 직접 작성했습니다.</p>
           <p><b>일상 회화</b>: 자주 쓰는 표현을 직접 골라 정리했습니다.</p>
           <p><b>Claude 사전</b>: 검색 탭에서 Claude에게 물어본 단어의 뜻·예문은 Anthropic의 Claude가 만든 것이며 틀릴 수 있습니다. 한 번 찾은 단어는 기기에 저장됩니다.</p>
-          <p><b>검색 사전</b>: 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)의 한국어 번역 약 2만 6천 개와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻을 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
+          <p><b>검색 사전</b>: 영어 위키낱말사전(<a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a> 추출본, CC BY-SA 4.0)의 한국어 번역 약 2만 6천 개와 <a href="https://github.com/garfieldnate/kengdic" target="_blank" rel="noopener">Kengdic</a>(MPL 2.0) 약 6만 9천 개를 합쳐 기기 안에서 검색합니다. 둘 다 없는 단어는 인터넷이 연결돼 있으면 <a href="https://dictionaryapi.dev" target="_blank" rel="noopener">Free Dictionary API</a>의 영어 뜻과 <a href="https://mymemory.translated.net" target="_blank" rel="noopener">MyMemory</a>의 한국어 기계 번역을 무료로 보여 줍니다. 네이버 사전 버튼은 네이버 사전 웹페이지를 엽니다.</p>
         </div>
       </details>
     </div>
@@ -901,7 +901,7 @@ a.btn.primary { color: var(--accent-ink); }
     var english = !korean && /^[a-z][a-z' -]*$/.test(q);
     if (english && !exact) html = renderOnline(q) + html;
     // Offer Claude unless the word is already a full entry (deck word, own word or an earlier Claude answer)
-    if (english && !(exact && hits[0][1].app)) html = renderAsk(q) + html;
+    if (english && !(exact && hits[0][1].app) && claudeCfg().key) html = renderAsk(q) + html;
     if (!html) {
       html = '<li class="empty" style="border:1px dashed var(--line);margin-top:8px"><h2>‘' + esc(raw) + '’ 없음</h2>' +
         '<p class="muted">앱 안의 사전에 없는 말이에요.</p><div class="row" style="justify-content:center">' +
@@ -991,25 +991,40 @@ a.btn.primary { color: var(--accent-ink); }
       online[q] = null;
       setTimeout(function () {
         if ($("q").value.trim().toLowerCase() !== q) { delete online[q]; return; }
-        fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(q))
+        var res = { defs: [], phonetic: "", ko: "" };
+        var done = function () { online[q] = res; if ($("q").value.trim().toLowerCase() === q) renderSearch(); };
+        // English definitions (dictionaryapi.dev) and a Korean machine translation (MyMemory); both free, no key
+        var a = fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(q))
           .then(function (r) { return r.ok ? r.json() : []; })
-          .then(function (d) { online[q] = Array.isArray(d) ? d : []; if ($("q").value.trim().toLowerCase() === q) renderSearch(); })
-          .catch(function () { online[q] = "offline"; if ($("q").value.trim().toLowerCase() === q) renderSearch(); });
-      }, 400);
-      return "";
+          .then(function (d) {
+            var e = Array.isArray(d) && d[0]; if (!e) return;
+            res.phonetic = e.phonetic || "";
+            (e.meanings || []).forEach(function (m) {
+              (m.definitions || []).slice(0, 2).forEach(function (x) { if (res.defs.length < 4) res.defs.push([m.partOfSpeech || "", x.definition]); });
+            });
+          }).catch(function () {});
+        var b = fetch("https://api.mymemory.translated.net/get?langpair=en%7Cko&q=" + encodeURIComponent(q))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            var t = d && d.responseStatus == 200 && d.responseData && d.responseData.translatedText;
+            if (t && /[가-힣]/.test(t) && t.length <= 40) res.ko = t.trim();
+          }).catch(function () {});
+        Promise.all([a, b]).then(done);
+      }, 500);
+      return '<li class="online"><div class="more" style="padding-top:12px"><p class="muted" style="margin:0">인터넷에서 ‘' + esc(q) + '’ 뜻을 찾는 중이에요…</p></div></li>';
     }
-    if (!o || o === "offline" || !o.length) return "";
-    var e = o[0], defs = [];
-    (e.meanings || []).forEach(function (m) {
-      (m.definitions || []).slice(0, 2).forEach(function (d) { if (defs.length < 4) defs.push('<li><span class="pos">' + esc(m.partOfSpeech || "") + '</span> ' + esc(d.definition) + '</li>'); });
-    });
-    if (!defs.length) return "";
+    if (!o) return '<li class="online"><div class="more" style="padding-top:12px"><p class="muted" style="margin:0">인터넷에서 ‘' + esc(q) + '’ 뜻을 찾는 중이에요…</p></div></li>';
+    // A real word has an English definition; without one the translation is only shown for multi-word phrases
+    if (!o.defs.length && !(o.ko && q.indexOf(" ") > 0)) return "";
+    var st = studying(q);
     return '<li class="online"><div class="more" style="padding-top:12px">' +
-      '<div class="row spread"><span class="hw">' + esc(e.word) + ' <span class="mono muted" style="font-size:13px">' + esc(e.phonetic || "") + '</span></span><span class="chip">영영 사전 · 인터넷</span></div>' +
-      '<p class="muted" style="margin:0;font-size:13px">앱 안의 영한사전에 없어서 영어 뜻을 가져왔어요.</p>' +
-      '<ul class="defs">' + defs.join("") + '</ul>' +
-      '<div class="row"><button class="btn small" data-say="' + esc(e.word) + '">발음 듣기</button>' +
-      '<a class="btn small primary" href="' + naverUrl(e.word) + '" target="_blank" rel="noopener">네이버 사전에서 한국어 뜻 보기</a></div></div></li>';
+      '<div class="row spread"><span class="hw">' + esc(q) + ' <span class="mono muted" style="font-size:13px">' + esc(o.phonetic) + '</span></span><span class="chip">인터넷 · 무료</span></div>' +
+      (o.ko ? '<p class="dict-ko"><span class="src">자동 번역</span><b>' + esc(o.ko) + '</b></p>' : '') +
+      (o.defs.length ? '<ul class="defs">' + o.defs.map(function (d) { return '<li><span class="pos">' + esc(d[0]) + '</span> ' + esc(d[1]) + '</li>'; }).join("") + '</ul>' : '') +
+      (o.ko ? '<p class="muted" style="margin:0;font-size:13px">한국어 뜻은 기계 번역이라 어색하거나 틀릴 수 있어요. 정확한 뜻은 네이버 사전에서 확인하세요.</p>' : '') +
+      '<div class="row"><button class="btn small" data-say="' + esc(q) + '">발음 듣기</button>' +
+      (o.ko && !st.length ? '<button class="btn small primary" data-addonline="' + esc(q) + '">내 단어에 추가</button>' : '') +
+      '<a class="btn small" href="' + naverUrl(q) + '" target="_blank" rel="noopener">네이버 사전</a></div></div></li>';
   }
   var qTimer;
   $("q").addEventListener("input", function () { openKey = null; clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 60); });
@@ -1017,6 +1032,12 @@ a.btn.primary { color: var(--accent-ink); }
     var t = e.target.closest("button"); if (!t) return;
     if (t.dataset.say) { speak(t.dataset.say); return; }
     if (t.dataset.ask) { askClaude(t.dataset.ask); return; }
+    if (t.dataset.addonline) {
+      var w = t.dataset.addonline, o = online[w]; if (!o || !o.ko) return;
+      state.words.push(makeWord(w, o.defs.length ? o.defs[0][0] : "", o.ko, ""));
+      save(); renderStats(); renderSearch(); toast("‘" + w + "’ 내 단어에 추가했어요");
+      return;
+    }
     if (t.dataset.setup) { show("list"); var d = $("claude-settings"); d.open = true; d.scrollIntoView(); return; }
     if (t.dataset.add) {
       var it = findItem(t.dataset.add); if (!it) return;
