@@ -822,7 +822,7 @@ a.btn.primary { color: var(--accent-ink); }
      1) words in the app's decks and your own words (curated meanings and examples)
      2) dictionary.js: ~95,000 English-Korean entries (Wiktionary + Kengdic), loaded on first use
      3) when nothing matches offline: English definitions from dictionaryapi.dev (needs internet) */
-  var INDEX = null, DICT = null, dictLoading = false;
+  var INDEX = null, DICT = null, DICT_MAP = null, dictLoading = false;
   function buildIndex() {
     var map = {};
     DECKS.forEach(function (d) {
@@ -854,6 +854,8 @@ a.btn.primary { color: var(--accent-ink); }
       return { word: r[0], key: r[0].toLowerCase(), pos: r[1], ipa: r[2], kw: kw, wk: r[3], kd: r[4], gloss: r[5], weak: !kw && !r[3],
                meaning: best.split("; ").slice(0, 4).join(", "), ko: ko.toLowerCase(), dict: true, decks: [] };
     });
+    DICT_MAP = {};
+    DICT.forEach(function (it) { DICT_MAP[it.key] = it; });
   }
   function appItems() {
     if (!INDEX) buildIndex();
@@ -888,6 +890,18 @@ a.btn.primary { color: var(--accent-ink); }
     if (!text || text.indexOf(q) < 0) return -1;
     return text.split(/[,;/·()]\s*/).some(function (x) { return x.trim() === q; }) ? 1.5 : 2;
   }
+  // Possible base forms of an inflected word: "services" -> service, "made" -> make, "running" -> run
+  function baseForms(q) {
+    var out = [], F = window.SISICO_FORMS || {};
+    if (F[q]) out.push(F[q]);
+    [["ies", "y"], ["ves", "f"], ["ves", "fe"], ["es", ""], ["s", ""], ["ied", "y"], ["ed", ""], ["ed", "e"], ["ing", ""], ["ing", "e"],
+     ["er", ""], ["er", "e"], ["est", ""], ["est", "e"], ["ily", "y"], ["ly", ""]].forEach(function (r) {
+      var suf = r[0]; if (q.length - suf.length < 2 || q.slice(-suf.length) !== suf) return;
+      var b = q.slice(0, -suf.length) + r[1]; out.push(b);
+      if (b.length > 2 && b[b.length - 1] === b[b.length - 2]) out.push(b.slice(0, -1));
+    });
+    return out;
+  }
   function naverUrl(word) { return "https://en.dict.naver.com/#/search?query=" + encodeURIComponent(word); }
   var openKey = null, lastHits = [], online = {};
   function findItem(key) { return lastHits.filter(function (x) { return x.key === key; })[0]; }
@@ -912,11 +926,27 @@ a.btn.primary { color: var(--accent-ink); }
       var sc = korean ? scoreKo(it.ko, q) : scoreEn(it.key, q);
       if (sc >= 0) hits.push([sc + (it.weak ? 0.4 : 0) + (it.key.indexOf(" ") > 0 ? 0.3 : 0), it]);
     });
+    // "services" has no good entry of its own: show "service" first and say so
+    var top = null;
+    hits.forEach(function (h) { if (h[1].key === q && (!top || h[0] < top[0])) top = h; });
+    if (!korean && (!top || top[1].weak)) {
+      var bases = baseForms(q), items = appItems(), found = null;
+      for (var bi = 0; bi < bases.length && !found; bi++) {
+        var bk = bases[bi];
+        found = items.filter(function (x) { return x.key === bk; })[0] || (DICT_MAP && DICT_MAP[bk] && !DICT_MAP[bk].weak ? DICT_MAP[bk] : null);
+      }
+      if (found) {
+        var copy = {}; Object.keys(found).forEach(function (k) { copy[k] = found[k]; });
+        copy.formOf = q;
+        hits = hits.filter(function (h) { return h[1].key !== found.key; });
+        hits.push([-1, copy]);
+      }
+    }
     hits.sort(function (a, b) { return a[0] - b[0] || a[1].key.length - b[1].key.length || (a[1].key < b[1].key ? -1 : 1); });
     lastHits = hits.slice(0, 60).map(function (h) { return h[1]; });
     meta.textContent = (hits.length ? hits.length.toLocaleString() + "개 찾음" + (hits.length > lastHits.length ? " · 위에서 " + lastHits.length + "개" : "") : "") +
       (dictLoading ? " · 큰 사전을 불러오는 중…" : "");
-    var exact = hits.length && hits[0][1].key === q;
+    var exact = hits.length && (hits[0][1].key === q || hits[0][1].formOf === q);
     var html = lastHits.map(renderHit).join("");
     var english = !korean && /^[a-z][a-z' -]*$/.test(q);
     // Also look online when the only offline entry is a weak Kengdic one
@@ -958,7 +988,8 @@ a.btn.primary { color: var(--accent-ink); }
     return '<li><button class="hit" data-k="' + esc(it.key) + '" aria-expanded="' + open + '">' +
       '<span class="hw">' + (korean ? esc(it.word) : mark(it.word, q)) + ' <span class="pos">' + esc(it.pos || "") + '</span></span>' +
       '<span class="hs' + (st.length ? " on" : "") + '">' + status + '</span>' +
-      '<span class="hm">' + (korean ? mark(it.meaning, q) : esc(it.meaning)) + '</span></button>' + more + '</li>';
+      '<span class="hm">' + (it.formOf ? '<span class="chip" style="margin-right:6px">' + esc(it.formOf) + '의 기본형</span>' : '') +
+        (korean ? mark(it.meaning, q) : esc(it.meaning)) + '</span></button>' + more + '</li>';
   }
   /* ---------- Naver dictionary: open it inside the app, then save the meaning the user copied ---------- */
   function capPlugin(name) {
