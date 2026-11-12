@@ -101,6 +101,7 @@ for k, e in entries.items():
     if not e['wk'] and not e['kd'] and not e['kw']:
         continue
     rows.append([e['w'], ' / '.join(e['pos']), e['ipa'], '; '.join(e['wk']), '; '.join(e['kd']), e['g'][:120], '; '.join(e['kw'])])
+rows = [r for r in rows if not any('\ufffd' in str(c) for c in r)]   # drop entries with broken characters
 rows.sort(key=lambda r: r[0].lower())
 
 # Irregular inflected forms -> headword (went -> go), for forms the app's suffix rules can't derive.

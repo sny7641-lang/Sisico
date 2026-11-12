@@ -54,3 +54,8 @@ cd android && ./gradlew assembleDebug   # Android SDK 필요
 
 `python3 tools/build_dictionary.py` 는 검색 사전 `www/dictionary.js` 를 만듭니다.
 `python3 tools/build_decks.py` 를 실행하면 위 자료로 `www/decks.js` 를 다시 만듭니다.
+
+## Claude 아티팩트 버전
+
+`python3 tools/build_artifact.py` 가 `www/index.html` 에서 아티팩트용 `artifact/index.html` 을 만듭니다.
+아티팩트로 열면 검색 탭에서 사전에 없는 단어를 Claude에게 바로 물어볼 수 있고(`sample` 기능, 보는 사람의 Claude 사용량 사용), API 키가 필요 없습니다.
