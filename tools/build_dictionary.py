@@ -8,6 +8,7 @@ Sources
       | gunzip | python3 tools/filter_wiktionary.py data/dictionary/wiktionary_en_ko.jsonl
   data/dictionary/kowiktionary_en.jsonl : English entries of the Korean Wiktionary (definitions written in
       Korean), from https://kaikki.org/kowiktionary/ . CC BY-SA 4.0 / GFDL. Preferred source for meanings.
+  data/dictionary/extra.tsv : word|pos|meaning, written by hand for frequent words the other sources miss.
   data/dictionary/kengdic.tsv : Kengdic Korean-English dictionary (Joe Speigle), MPL 2.0 or LGPL 2.0+.
       https://github.com/garfieldnate/kengdic . Used in reverse (English gloss -> Korean word).
 """
@@ -46,6 +47,16 @@ for line in open(os.path.join(DD, 'wiktionary_en_ko.jsonl'), encoding='utf-8'):
             e['wk'].append(ko)
 
 HANGUL = re.compile(r'[가-힣]')
+# Hand-written meanings for common words the sources above cover poorly. Listed first so they are shown first.
+for line in open(os.path.join(DD, 'extra.tsv'), encoding='utf-8'):
+    p = line.rstrip('\n').split('|')
+    if len(p) != 3:
+        continue
+    e = add(p[0].lower(), p[0])
+    if p[1] and p[1] not in e['pos']:
+        e['pos'].append(p[1])
+    e['kw'].append(p[2])
+
 for line in open(os.path.join(DD, 'kowiktionary_en.jsonl'), encoding='utf-8'):
     x = json.loads(line)
     w = (x.get('word') or '').strip()

@@ -49,6 +49,7 @@ cd android && ./gradlew assembleDebug   # Android SDK 필요
 
 | `data/dictionary/kowiktionary_en.jsonl` | 검색용 영한사전 1순위 (한국어 위키낱말사전의 영어 표제어) | 한국어 Wiktionary, kaikki.org 추출 — CC BY-SA 4.0 |
 | `data/dictionary/wiktionary_en_ko.jsonl` | 검색용 영한사전 (한국어 번역이 있는 영어 표제어) | English Wiktionary, kaikki.org 추출 — CC BY-SA 4.0 (`tools/filter_wiktionary.py`) |
+| `data/dictionary/extra.tsv` | 자주 쓰이지만 위 자료가 부실한 단어 964개의 뜻 | 직접 작성 |
 | `data/dictionary/kengdic.tsv` | 검색용 한영사전 (영어 뜻으로 거꾸로 색인) | Kengdic (Joe Speigle) — MPL 2.0 / LGPL 2.0+ |
 
 `python3 tools/build_dictionary.py` 는 검색 사전 `www/dictionary.js` 를 만듭니다.
