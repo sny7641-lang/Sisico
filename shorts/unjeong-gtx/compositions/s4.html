@@ -1,0 +1,64 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s4 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0d1322; --panel: #161f35; --panel2: #1d2844; --line: #2b3a5e;
+  --ink: #f4f1ea; --muted: #9aa6bd; --violet: #a77bff; --violet-soft: rgba(167,123,255,.18);
+  --gold: #f2c14e; --up: #ff7a6b; --ok: #4fd1a5; --warn: #ffb35c;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 90px; top: 230px; font-size: 34px; font-weight: 600; color: var(--violet); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
+
+#s4 .title { font-size: 104px; }
+#s4 .title b { color: var(--violet); }
+#s4 .rail { position: absolute; left: 150px; top: 492px; width: 10px; height: 500px; border-radius: 6px; background: var(--violet); }
+#s4 .gap { position: absolute; left: 150px; top: 617px; width: 10px; height: 250px; background: repeating-linear-gradient(var(--bg) 0 14px, transparent 14px 28px); }
+#s4 .gapfill { position: absolute; left: 150px; top: 617px; width: 10px; height: 250px; background: var(--gold); transform-origin: center top; }
+#s4 .s4-node { position: absolute; left: 0; right: 0; height: 60px; }
+#s4 .s4-node .dot { position: absolute; left: 134px; top: 6px; width: 42px; height: 42px; border-radius: 50%; background: var(--bg); border: 8px solid var(--violet); }
+#s4 .s4-node .nm { position: absolute; left: 220px; top: -4px; font-size: 52px; font-weight: 800; }
+#s4 .s4-node .st { position: absolute; left: 520px; top: 8px; font-size: 32px; color: var(--muted); font-weight: 600; }
+#s4 .s4-node.pend .dot { border-color: var(--gold); }
+#s4 .s4-node.pend .nm, #s4 .s4-node.pend .st { color: var(--gold); }
+#s4 .when { position: absolute; left: 90px; right: 90px; top: 1070px; font-size: 40px; font-weight: 700; }
+#s4 .when span { color: var(--gold); }
+
+  </style>
+  <div id="s4" data-composition-id="s4" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s4-k">GTX-A 전 구간 연결</div>
+    <div class="title" id="s4-t">다음 열쇠, <b>삼성역</b></div>
+    <div class="rail"></div>
+    <div class="gap"></div>
+    <div class="gapfill" id="s4-fill"></div>
+    <div class="s4-node" id="s4-n0" style="top:470px"><span class="dot"></span><span class="nm">운정중앙</span><span class="st">운행 중</span></div>
+    <div class="s4-node" id="s4-n1" style="top:595px"><span class="dot"></span><span class="nm">서울역</span><span class="st">운행 중</span></div>
+    <div class="s4-node pend" id="s4-n2" style="top:720px"><span class="dot"></span><span class="nm">삼성</span><span class="st">무정차 통과 예정</span></div>
+    <div class="s4-node" id="s4-n3" style="top:845px"><span class="dot"></span><span class="nm">수서</span><span class="st">운행 중</span></div>
+    <div class="s4-node" id="s4-n4" style="top:970px"><span class="dot"></span><span class="nm">동탄</span><span class="st">운행 중</span></div>
+    <div class="when" id="s4-w">국토부 예상 · <span>2027년 상반기</span></div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s4 " + s);
+
+      tl.fromTo(q('#s4-k'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s4-t'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.15);
+      for (let i = 0; i < 5; i++) tl.fromTo(q('#s4-n' + i), { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power3.out' }, 0.5 + i * 0.12);
+      tl.fromTo(q('#s4-fill'), { scaleY: 0 }, { scaleY: 1, duration: 1.4, ease: 'power2.inOut' }, 3.0);
+      tl.fromTo(q('#s4-n2'), { scale: 1 }, { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: '150px 30px' }, 1.4);
+      tl.fromTo(q('#s4-w'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 4.4);
+
+      window.__timelines["s4"] = tl;
+    })();
+  </script>
+</template>

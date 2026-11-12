@@ -1,0 +1,51 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s5 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0d1322; --panel: #161f35; --panel2: #1d2844; --line: #2b3a5e;
+  --ink: #f4f1ea; --muted: #9aa6bd; --violet: #a77bff; --violet-soft: rgba(167,123,255,.18);
+  --gold: #f2c14e; --up: #ff7a6b; --ok: #4fd1a5; --warn: #ffb35c;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 90px; top: 230px; font-size: 34px; font-weight: 600; color: var(--violet); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
+
+#s5 .item { position: absolute; left: 90px; right: 90px; height: 150px; border-radius: 28px; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; gap: 30px; padding: 0 40px; }
+#s5 .ic { width: 78px; height: 78px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; font-weight: 800; flex: none; }
+#s5 .ic.w { background: rgba(255,179,92,.18); color: var(--warn); }
+#s5 .ic.k { background: rgba(79,209,165,.18); color: var(--ok); }
+#s5 .tx { font-size: 54px; font-weight: 800; }
+#s5 .tx small { display: block; font-size: 30px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+#s5 #s5-i1 { top: 470px; } #s5 #s5-i2 { top: 650px; } #s5 #s5-i3 { top: 860px; border-color: var(--ok); }
+
+  </style>
+  <div id="s5" data-composition-id="s5" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s5-k">사기 전에</div>
+    <div class="title" id="s5-t">체크 포인트</div>
+    <div class="item" id="s5-i1"><span class="ic w">!</span><span class="tx">대출 규제<small>매수 여력을 좌우</small></span></div>
+    <div class="item" id="s5-i2"><span class="ic w">!</span><span class="tx">주변 입주 물량<small>운정3지구 신축 공급</small></span></div>
+    <div class="item" id="s5-i3"><span class="ic k">✓</span><span class="tx">역까지 거리 · 실거래가<small>단지별로 꼭 비교</small></span></div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s5 " + s);
+
+      tl.fromTo(q('#s5-k'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s5-t'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.15);
+      tl.fromTo(q('#s5-i1'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.45, ease: 'power3.out' }, 0.75);
+      tl.fromTo(q('#s5-i2'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.45, ease: 'power3.out' }, 1.9);
+      tl.fromTo(q('#s5-i3'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.45, ease: 'power3.out' }, 3.95);
+
+      window.__timelines["s5"] = tl;
+    })();
+  </script>
+</template>

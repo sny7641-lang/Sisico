@@ -1,0 +1,66 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s2 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0d1322; --panel: #161f35; --panel2: #1d2844; --line: #2b3a5e;
+  --ink: #f4f1ea; --muted: #9aa6bd; --violet: #a77bff; --violet-soft: rgba(167,123,255,.18);
+  --gold: #f2c14e; --up: #ff7a6b; --ok: #4fd1a5; --warn: #ffb35c;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 90px; top: 230px; font-size: 34px; font-weight: 600; color: var(--violet); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
+
+#s2 .card { position: absolute; left: 70px; right: 70px; top: 400px; height: 560px; border-radius: 36px; background: var(--panel); border: 2px solid var(--line); }
+#s2 .name { position: absolute; left: 60px; top: 50px; font-size: 64px; font-weight: 800; }
+#s2 .chips { position: absolute; left: 60px; top: 145px; display: flex; gap: 14px; }
+#s2 .chip { padding: 8px 22px; border-radius: 30px; background: var(--panel2); color: var(--muted); font-size: 30px; font-weight: 600; }
+#s2 .price { position: absolute; left: 60px; top: 230px; font-size: 136px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
+#s2 .price small { font-size: 64px; }
+#s2 .when { position: absolute; left: 60px; top: 390px; font-size: 32px; color: var(--muted); }
+#s2 .from { position: absolute; left: 60px; top: 455px; font-size: 34px; color: var(--ink); font-weight: 600; }
+#s2 .from b { color: var(--up); }
+#s2 .map { position: absolute; right: 60px; top: 50px; width: 230px; height: 150px; }
+#s2 .map .st { position: absolute; left: 10px; top: 92px; width: 34px; height: 34px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 10px var(--violet-soft); }
+#s2 .map .ap { position: absolute; left: 180px; top: 20px; width: 30px; height: 30px; border-radius: 8px; background: var(--gold); }
+#s2 .map svg { position: absolute; inset: 0; }
+#s2 .map .ml { position: absolute; left: -60px; top: 140px; width: 300px; white-space: nowrap; text-align: center; font-size: 28px; color: var(--muted); }
+
+  </style>
+  <div id="s2" data-composition-id="s2" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s2-k">역 도보권 대표 단지 · 최근 실거래</div>
+    <div class="title" id="s2-t">아이파크 84㎡</div>
+    <div class="card" id="s2-card">
+      <div class="name">운정신도시 아이파크</div>
+      <div class="chips"><span class="chip">전용 84㎡</span><span class="chip">23층</span></div>
+      <div class="price"><span id="s2-num">7억 9,500</span><small>만</small></div>
+      <div class="when">2026.10.24 거래 · 국토부 실거래가</div>
+      <div class="from" id="s2-from">2017년 분양가 3억 8,500만 → <b>+4억 1,000만</b></div>
+      <div class="map"><svg viewBox="0 0 230 150"><path d="M27 109 C 80 100, 130 60, 195 35" stroke="#9aa6bd" stroke-width="3" stroke-dasharray="6 8" fill="none"/></svg><span class="st"></span><span class="ap"></span><div class="ml">역 ↔ 단지 약 300m</div></div>
+    </div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s2 " + s);
+
+      tl.fromTo(q('#s2-k'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s2-t'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.15);
+      tl.fromTo(q('#s2-card'), { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.35);
+      const c = { v: 0 };
+      const fmt = (v) => { const e = Math.floor(v / 10000); const m = Math.round(v % 10000); return e + '억 ' + m.toLocaleString('en-US'); };
+      tl.fromTo(c, { v: 60000 }, { v: 79500, duration: 1.5, ease: 'power3.out', onUpdate: () => { q('#s2-num').textContent = fmt(c.v); } }, 4.45);
+      tl.set(q('#s2-num'), { textContent: '7억 9,500' }, 5.98);
+      tl.fromTo(q('#s2-from'), { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: 'power3.out' }, 4.3);
+
+      window.__timelines["s2"] = tl;
+    })();
+  </script>
+</template>

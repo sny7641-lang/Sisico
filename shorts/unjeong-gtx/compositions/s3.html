@@ -1,0 +1,59 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s3 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0d1322; --panel: #161f35; --panel2: #1d2844; --line: #2b3a5e;
+  --ink: #f4f1ea; --muted: #9aa6bd; --violet: #a77bff; --violet-soft: rgba(167,123,255,.18);
+  --gold: #f2c14e; --up: #ff7a6b; --ok: #4fd1a5; --warn: #ffb35c;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 90px; top: 230px; font-size: 34px; font-weight: 600; color: var(--violet); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
+
+#s3 .title { font-size: 78px; }
+#s3 .row { position: absolute; left: 90px; right: 90px; }
+#s3 .row .lab { font-size: 32px; color: var(--muted); font-weight: 600; }
+#s3 .row .bar { margin-top: 14px; height: 96px; border-radius: 18px; transform-origin: left center; display: flex; align-items: center; justify-content: flex-end; padding-right: 28px; font-size: 56px; font-weight: 800; }
+#s3 #s3-r1 { top: 520px; } #s3 #s3-r2 { top: 700px; }
+#s3 #s3-b1 { width: 520px; background: #3a4a72; color: var(--ink); }
+#s3 #s3-b2 { width: 722px; background: var(--gold); color: #2b1d00; }
+#s3 .delta { position: absolute; left: 830px; top: 768px; padding: 8px 22px; border-radius: 30px; background: rgba(255,122,107,.16); color: var(--up); font-size: 40px; font-weight: 800; }
+#s3 .stamp { position: absolute; left: 90px; right: 90px; top: 880px; height: 200px; border-radius: 30px; background: var(--violet-soft); border: 3px solid var(--violet); display: flex; align-items: center; gap: 30px; padding: 0 44px; }
+#s3 .stamp .big { font-size: 120px; font-weight: 800; color: #fff; letter-spacing: -.02em; }
+#s3 .stamp .small { font-size: 34px; color: var(--ink); font-weight: 600; line-height: 1.35; }
+
+  </style>
+  <div id="s3" data-composition-id="s3" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s3-k">역 앞 신축 · 84㎡ 평균 분양가</div>
+    <div class="title" id="s3-t">GTX운정중앙역<br>시티프라디움</div>
+    <div class="row" id="s3-r1"><div class="lab">2023.11 주변 분양 (제일풍경채·우미린)</div><div class="bar" id="s3-b1">5.4억</div></div>
+    <div class="row" id="s3-r2"><div class="lab">2026.11 시티프라디움 (3·4단지 평균)</div><div class="bar" id="s3-b2">7.5억</div></div>
+    <div class="delta" id="s3-d">+2.1억</div>
+    <div class="stamp" id="s3-stamp"><span class="big">42 : 1</span><span class="small">1순위<br>평균 경쟁률</span></div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s3 " + s);
+
+      tl.fromTo(q('#s3-k'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s3-t'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.15);
+      tl.fromTo(q('#s3-r1'), { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.0);
+      tl.fromTo(q('#s3-b1'), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.out' }, 1.05);
+      tl.fromTo(q('#s3-r2'), { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.6);
+      tl.fromTo(q('#s3-b2'), { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: 'power3.out' }, 1.65);
+      tl.fromTo(q('#s3-d'), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, 4.6);
+      tl.fromTo(q('#s3-stamp'), { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power4.out' }, 6.95);
+
+      window.__timelines["s3"] = tl;
+    })();
+  </script>
+</template>

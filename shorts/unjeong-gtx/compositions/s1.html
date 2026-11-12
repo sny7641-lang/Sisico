@@ -1,0 +1,71 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s1 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0d1322; --panel: #161f35; --panel2: #1d2844; --line: #2b3a5e;
+  --ink: #f4f1ea; --muted: #9aa6bd; --violet: #a77bff; --violet-soft: rgba(167,123,255,.18);
+  --gold: #f2c14e; --up: #ff7a6b; --ok: #4fd1a5; --warn: #ffb35c;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 90px; top: 230px; font-size: 34px; font-weight: 600; color: var(--violet); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
+
+#s1 .badge { position: absolute; left: 90px; top: 250px; padding: 10px 26px; border-radius: 40px; background: var(--violet); color: #140b2b; font-size: 38px; font-weight: 800; }
+#s1 .title { top: 330px; font-size: 150px; }
+#s1 .track { position: absolute; left: 140px; width: 800px; top: 700px; height: 10px; border-radius: 6px; background: var(--line); }
+#s1 .fill  { position: absolute; left: 140px; width: 800px; top: 700px; height: 10px; border-radius: 6px; background: var(--violet); transform-origin: left center; }
+#s1 .s1-node { position: absolute; top: 683px; width: 0; }
+#s1 .s1-node .dot { position: absolute; left: -16px; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: 6px solid var(--violet); }
+#s1 .s1-node .dot.big { left: -24px; top: -2px; width: 48px; height: 48px; background: var(--violet); border-color: #e7dcff; }
+#s1 .s1-node .lab { position: absolute; top: 70px; left: -120px; width: 240px; text-align: center; font-size: 32px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+#s1 .s1-node .lab.strong { color: var(--ink); font-size: 38px; font-weight: 800; }
+#s1 .train { position: absolute; left: 116px; top: 666px; width: 78px; height: 78px; border-radius: 22px; background: #fff; box-shadow: 0 0 40px rgba(167,123,255,.8); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: #3b1f86; }
+#s1 .min { position: absolute; left: 90px; right: 90px; top: 830px; display: flex; align-items: baseline; gap: 18px; }
+#s1 .min .pre { font-size: 46px; font-weight: 600; color: var(--muted); }
+#s1 .min .num { font-size: 190px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
+#s1 .min .unit { font-size: 80px; font-weight: 800; color: var(--gold); }
+#s1 .ask { position: absolute; left: 90px; right: 90px; top: 1065px; font-size: 52px; font-weight: 700; color: var(--ink); }
+#s1 .ask b { color: var(--gold); }
+
+  </style>
+  <div id="s1" data-composition-id="s1" data-width="1080" data-height="1920">
+
+    <div class="badge" id="s1-badge">GTX-A</div>
+    <div class="title" id="s1-title">운정중앙역</div>
+    <div class="track"></div>
+    <div class="fill" id="s1-fill"></div>
+    <div class="s1-node" id="s1-n0" style="left:140px"><span class="dot big"></span><span class="lab strong">운정중앙</span></div>
+    <div class="s1-node" id="s1-n1" style="left:356px"><span class="dot"></span><span class="lab">킨텍스</span></div>
+    <div class="s1-node" id="s1-n2" style="left:516px"><span class="dot"></span><span class="lab">대곡</span></div>
+    <div class="s1-node" id="s1-n3" style="left:716px"><span class="dot"></span><span class="lab">연신내</span></div>
+    <div class="s1-node" id="s1-n4" style="left:940px"><span class="dot big"></span><span class="lab strong">서울역</span></div>
+    <div class="train" id="s1-train">A</div>
+    <div class="min" id="s1-min"><span class="pre">서울역까지</span><span class="num" id="s1-num">22</span><span class="unit">분</span></div>
+    <div class="ask" id="s1-ask">지금 집값은, <b>어디쯤?</b></div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s1 " + s);
+
+      tl.fromTo(q('#s1-title'), { y: 0, scale: 1 }, { scale: 1.03, duration: 7.4, ease: 'none', transformOrigin: 'left center' }, 0);
+      tl.fromTo(q('#s1-fill'), { scaleX: 0 }, { scaleX: 1, duration: 3.0, ease: 'power2.inOut' }, 0.4);
+      tl.fromTo(q('#s1-train'), { x: 0 }, { x: 800, duration: 3.0, ease: 'power2.inOut' }, 0.4);
+      for (let i = 0; i < 5; i++) tl.fromTo(q('#s1-n' + i), { opacity: 0.35 }, { opacity: 1, duration: 0.25 }, 0.4 + [0, .27, .47, .72, 1][i] * 3.0 * 0.92);
+      const c = { v: 0 };
+      tl.fromTo(c, { v: 0 }, { v: 22, duration: 3.0, ease: 'power2.inOut', onUpdate: () => { q('#s1-num').textContent = Math.round(c.v) || 22; } }, 0.4);
+      tl.set(q('#s1-num'), { textContent: 22 }, 3.45);
+      tl.fromTo(q('#s1-num'), { scale: 1 }, { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: 'left bottom' }, 3.45);
+      tl.fromTo(q('#s1-ask'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 4.75);
+
+      window.__timelines["s1"] = tl;
+    })();
+  </script>
+</template>
