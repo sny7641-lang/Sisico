@@ -15,26 +15,32 @@
 .kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 34px; font-weight: 600; color: var(--hill); letter-spacing: .02em; }
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 
-#s2 .title { font-size: 80px; }
-#s2 .bar-row { position: absolute; left: 90px; right: 90px; }
-#s2 .bar-row .lab { font-size: 32px; font-weight: 700; display: flex; justify-content: space-between; width: 760px; }
-#s2 .bar-row .lab small { color: var(--muted); font-weight: 600; font-size: 28px; }
-#s2 .bar-row .bar { margin-top: 10px; height: 78px; border-radius: 16px; transform-origin: left center; display: flex; align-items: center; justify-content: flex-end; padding-right: 22px; font-size: 44px; font-weight: 800; color: #0c1519; }
-#s2 #s2-r1 { top: 470px; } #s2 #s2-r2 { top: 620px; } #s2 #s2-r3 { top: 770px; }
-#s2 #s2-b1 { background: var(--hill); } #s2 #s2-b2 { background: var(--pru); } #s2 #s2-b3 { background: var(--ipk); }
-#s2 .split { position: absolute; left: 90px; right: 90px; top: 950px; height: 150px; border-radius: 26px; background: var(--panel2); border: 2px solid var(--gold); display: flex; align-items: center; gap: 24px; padding: 0 36px; }
-#s2 .split .a { font-size: 46px; font-weight: 800; color: var(--gold); white-space: nowrap; }
-#s2 .split .b { font-size: 34px; font-weight: 700; line-height: 1.35; }
+#s2 .title { font-size: 84px; }
+#s2 .row { position: absolute; left: 90px; right: 90px; }
+#s2 .row .lab { font-size: 40px; font-weight: 800; display: flex; align-items: baseline; gap: 16px; }
+#s2 .row .lab b { font-size: 64px; color: var(--gold); }
+#s2 .row .lab small { font-size: 30px; color: var(--muted); font-weight: 600; }
+#s2 .bar { margin-top: 12px; height: 92px; border-radius: 18px; overflow: hidden; display: flex; transform-origin: left center; }
+#s2 .sg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: #0c1519; }
+#s2 .sg.s { background: var(--gold); } #s2 .sg.j { background: var(--hill); } #s2 .sg.w { background: var(--pru); }
+#s2 #s2-r59 { top: 440px; } #s2 #s2-r84 { top: 650px; }
+#s2 .legend { position: absolute; left: 90px; right: 90px; top: 870px; display: flex; gap: 30px; font-size: 32px; font-weight: 700; }
+#s2 .legend i { display: inline-block; width: 26px; height: 26px; border-radius: 6px; margin-right: 10px; vertical-align: -3px; }
+#s2 .x2 { position: absolute; right: 90px; top: 430px; padding: 10px 26px; border-radius: 34px; background: var(--gold); color: #2b1d00; font-size: 48px; font-weight: 800; }
+#s2 .wol { position: absolute; left: 90px; right: 90px; top: 960px; height: 120px; border-radius: 24px; background: rgba(143,168,255,.14); border: 2px solid var(--pru); display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
+#s2 .wol span { font-size: 38px; font-weight: 800; }
+#s2 .wol b { font-size: 60px; font-weight: 800; color: var(--pru); }
+#s2 .note { position: absolute; left: 90px; right: 90px; top: 1100px; font-size: 28px; color: var(--muted); }
 
   </style>
   <div id="s2" data-composition-id="s2" data-width="1080" data-height="1920">
 
-    <div class="kicker" id="s2-k">2020~21년 · 84㎡ 최고가</div>
-    <div class="title" id="s2-t">셋 다 9억 안팎</div>
-    <div class="bar-row" id="s2-r1"><div class="lab">힐스테이트운정 <small>2020.11</small></div><div class="bar" id="s2-b1" style="width:704px">8.99억</div></div>
-    <div class="bar-row" id="s2-r2"><div class="lab">센트럴푸르지오 <small>2021.10</small></div><div class="bar" id="s2-b2" style="width:736px">9.4억</div></div>
-    <div class="bar-row" id="s2-r3"><div class="lab">아이파크 <small>2021.07</small></div><div class="bar" id="s2-b3" style="width:760px">9.7억</div></div>
-    <div class="split" id="s2-split"><span class="a">GTX 개통 후</span><span class="b">연식 · 역 거리로<br>순위가 갈렸다</span></div>
+    <div class="kicker" id="s2-k">최근 6개월 · 실거래 건수</div>
+    <div class="title" id="s2-t">59㎡가 2배</div>
+    <div class="row" id="s2-r59"><div class="lab">59㎡ <b>108건</b><small>매매 24 · 전세 54 · 월세 30</small></div><div class="bar" id="s2-b59"><span class="sg s" style="width:191px">매매</span><span class="sg j" style="width:430px">전세</span><span class="sg w" style="width:238px">월세</span></div></div>
+    <div class="row" id="s2-r84"><div class="lab">84㎡ <b>55건</b><small>매매 16 · 전세 34 · 월세 5</small></div><div class="bar" id="s2-b84"><span class="sg s" style="width:127px">매매</span><span class="sg j" style="width:270px">전세</span><span class="sg w" style="width:39px"></span></div></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>매매</span><span><i style="background:var(--hill)"></i>전세</span><span><i style="background:var(--pru)"></i>월세</span></div>
+    <div class="wol" id="s2-wol"><span>월세 거래</span><b>30 : 5</b></div>
 
   </div>
   <script>
@@ -44,11 +50,11 @@
 
       tl.fromTo(q('#s2-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
       tl.fromTo(q('#s2-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.15);
-      for (let i = 1; i <= 3; i++) {
-        tl.fromTo(q('#s2-r' + i), { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.6 + i * 0.35);
-        tl.fromTo(q('#s2-b' + i), { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power3.out' }, 0.65 + i * 0.35);
-      }
-      tl.fromTo(q('#s2-split'), { opacity: 0, scale: 1.15 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power4.out' }, 5.5);
+      tl.fromTo(q('#s2-r59'), { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.5);
+      tl.fromTo(q('#s2-b59'), { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: 'power3.out' }, 0.55);
+      tl.fromTo(q('#s2-r84'), { opacity: 0 }, { opacity: 1, duration: 0.25 }, 3.3);
+      tl.fromTo(q('#s2-b84'), { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power3.out' }, 3.35);
+      tl.fromTo(q('#s2-wol'), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 5.9);
 
       window.__timelines["s2"] = tl;
     })();

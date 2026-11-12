@@ -15,25 +15,20 @@
 .kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 34px; font-weight: 600; color: var(--hill); letter-spacing: .02em; }
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 
-#s1 .title { top: 300px; font-size: 76px; }
-#s1 .big { position: absolute; left: 90px; right: 90px; top: 400px; font-size: 210px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
-#s1 .big span { display: inline-block; }
-#s1 .big .h { color: var(--hill); } #s1 .big .p { color: var(--pru); } #s1 .big .a { color: var(--ipk); }
-#s1 .row { position: absolute; left: 90px; right: 90px; height: 110px; border-radius: 24px; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; gap: 26px; padding: 0 34px; }
-#s1 .row .k { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 800; color: #0c1519; flex: none; }
-#s1 .row .n { font-size: 46px; font-weight: 800; }
-#s1 #s1-r1 { top: 700px; } #s1 #s1-r2 { top: 830px; } #s1 #s1-r3 { top: 960px; }
-#s1 #s1-r1 .k { background: var(--hill); } #s1 #s1-r2 .k { background: var(--pru); } #s1 #s1-r3 .k { background: var(--ipk); }
-#s1 #s1-r1 { border-color: var(--hill); }
+#s1 .kicker { top: 330px; font-size: 44px; color: var(--ink); }
+#s1 .big { position: absolute; left: 80px; right: 80px; top: 420px; font-size: 330px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--hill); }
+#s1 .big small { font-size: 150px; letter-spacing: -.02em; }
+#s1 .sub { position: absolute; left: 90px; right: 90px; top: 790px; font-size: 54px; font-weight: 800; }
+#s1 .sub b { color: var(--gold); }
+#s1 .tag { position: absolute; left: 90px; top: 900px; padding: 12px 28px; border-radius: 40px; background: var(--hill-soft); border: 2px solid var(--hill); font-size: 36px; font-weight: 700; color: var(--hill); }
 
   </style>
   <div id="s1" data-composition-id="s1" data-width="1080" data-height="1920">
 
-    <div class="title" id="s1-t">운정 대장 3인방</div>
-    <div class="big" id="s1-big"><span class="h" id="s1-h">힐</span><span class="p" id="s1-p">푸</span><span class="a" id="s1-a">아</span></div>
-    <div class="row" id="s1-r1"><span class="k">힐</span><span class="n">힐스테이트운정</span></div>
-    <div class="row" id="s1-r2"><span class="k">푸</span><span class="n">운정신도시 센트럴푸르지오</span></div>
-    <div class="row" id="s1-r3"><span class="k">아</span><span class="n">운정신도시 아이파크</span></div>
+    <div class="kicker" id="s1-k">힐스테이트운정, 요즘 가장 바쁜 평형</div>
+    <div class="big" id="s1-big">59<small>㎡</small></div>
+    <div class="sub" id="s1-sub">매매 · 전세 · 월세 <b>모두 활발</b></div>
+    <div class="tag" id="s1-tag">25평형</div>
 
   </div>
   <script>
@@ -41,13 +36,9 @@
       const tl = gsap.timeline({ paused: true });
       const q = (s) => document.querySelector("#s1 " + s);
 
-      tl.fromTo(q('#s1-big'), { scale: 1 }, { scale: 1.04, duration: 6.5, ease: 'none', transformOrigin: 'left center' }, 0);
-      tl.fromTo(q('#s1-r1'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 3.1);
-      tl.fromTo(q('#s1-r2'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 4.25);
-      tl.fromTo(q('#s1-r3'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 5.15);
-      tl.fromTo(q('#s1-h'), { y: 0 }, { y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, 3.1);
-      tl.fromTo(q('#s1-p'), { y: 0 }, { y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, 4.25);
-      tl.fromTo(q('#s1-a'), { y: 0 }, { y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, 5.15);
+      tl.fromTo(q('#s1-big'), { scale: 1 }, { scale: 1.05, duration: 5.4, ease: 'none', transformOrigin: 'left center' }, 0);
+      tl.fromTo(q('#s1-sub'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 2.0);
+      tl.fromTo(q('#s1-tag'), { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)' }, 3.6);
 
       window.__timelines["s1"] = tl;
     })();

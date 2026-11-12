@@ -15,49 +15,34 @@
 .kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 34px; font-weight: 600; color: var(--hill); letter-spacing: .02em; }
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 
-#s4 .title { font-size: 88px; color: var(--hill); }
-#s4 .card { position: absolute; left: 70px; right: 70px; top: 420px; height: 330px; border-radius: 32px; background: var(--panel); border: 2px solid var(--line); }
-#s4 .from { position: absolute; left: 50px; top: 44px; font-size: 34px; color: var(--muted); font-weight: 600; }
-#s4 .from s { color: var(--muted); }
-#s4 .now { position: absolute; left: 50px; top: 100px; font-size: 130px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
-#s4 .now small { font-size: 56px; }
-#s4 .delta { position: absolute; right: 44px; top: 128px; padding: 10px 24px; border-radius: 30px; background: rgba(111,182,255,.16); color: var(--down); font-size: 44px; font-weight: 800; }
-#s4 .when { position: absolute; left: 50px; top: 255px; font-size: 28px; color: var(--muted); }
-#s4 .chips { position: absolute; left: 70px; right: 70px; top: 790px; display: flex; flex-direction: column; gap: 22px; }
-#s4 .chip { height: 104px; border-radius: 24px; background: var(--hill-soft); border: 2px solid var(--hill); display: flex; align-items: center; gap: 22px; padding: 0 32px; font-size: 46px; font-weight: 800; }
-#s4 .chip i { font-style: normal; width: 54px; height: 54px; border-radius: 50%; background: var(--hill); color: #0c1519; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+#s4 .title { font-size: 80px; }
+#s4 .cd { position: absolute; left: 70px; right: 70px; height: 190px; border-radius: 28px; background: var(--panel); border: 2px solid var(--line); }
+#s4 .kd { position: absolute; left: 36px; top: 34px; padding: 6px 22px; border-radius: 24px; font-size: 32px; font-weight: 800; color: #0c1519; }
+#s4 .kd.gold { background: var(--gold); } #s4 .kd.hill { background: var(--hill); } #s4 .kd.pru { background: var(--pru); }
+#s4 .v { position: absolute; right: 40px; top: 22px; font-size: 92px; font-weight: 800; letter-spacing: -.02em; }
+#s4 .v small { font-size: 46px; }
+#s4 .n { position: absolute; left: 36px; right: 40px; bottom: 26px; font-size: 28px; color: var(--muted); font-weight: 600; }
+#s4 .note { position: absolute; left: 90px; right: 90px; top: 1075px; font-size: 28px; color: var(--muted); }
 
   </style>
   <div id="s4" data-composition-id="s4" data-width="1080" data-height="1920">
 
-    <div class="kicker" id="s4-k">84㎡ · 고점 대비</div>
-    <div class="title" id="s4-t">힐스테이트운정</div>
-    <div class="card" id="s4-card">
-      <div class="from">2020.11 최고가 <s>8.99억</s> →</div>
-      <div class="now"><span id="s4-num">6.5</span><small>억</small></div>
-      <div class="delta" id="s4-d">−2.49억</div>
-      <div class="when">2026.11.7 실거래 · 13층 · 국토부</div>
-    </div>
-    <div class="chips">
-      <div class="chip" id="s4-c1"><i>✓</i>2,998세대 대단지</div>
-      <div class="chip" id="s4-c2"><i>✓</i>운정중앙역 도보권</div>
-    </div>
-
+    <div class="kicker" id="s4-k">힐스테이트운정 59㎡ · 최근 6개월</div>
+    <div class="title" id="s4-t">얼마에 거래됐나</div>
+    <div class="cd" id="s4-c1" style="top:420px"><span class="kd gold">매매</span><span class="v">4.95<small>억</small></span><span class="n">중간값 · 4.68~5.4억 · 24건</span></div>
+    <div class="cd" id="s4-c2" style="top:635px"><span class="kd hill">전세</span><span class="v">3.1<small>억</small></span><span class="n">중간값 · 최근 3.5억 · 54건</span></div>
+    <div class="cd" id="s4-c3" style="top:850px"><span class="kd pru">월세</span><span class="v">3,500 / 130<small></small></span><span class="n">보증금 / 월(만원) 중간값 · 30건</span></div>
   </div>
   <script>
     (function () {
       const tl = gsap.timeline({ paused: true });
       const q = (s) => document.querySelector("#s4 " + s);
 
-      tl.fromTo(q('#s4-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
-      tl.fromTo(q('#s4-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.15);
-      tl.fromTo(q('#s4-card'), { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 0.3);
-      const c = { v: 8.99 };
-      tl.fromTo(c, { v: 8.99 }, { v: 6.5, duration: 1.4, ease: 'power3.out', onUpdate: () => { q('#s4-num').textContent = c.v.toFixed(2).replace(/0$/, ''); } }, 0.5);
-      tl.set(q('#s4-num'), { textContent: '6.5' }, 1.95);
-      tl.fromTo(q('#s4-d'), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, 1.9);
-      tl.fromTo(q('#s4-c1'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 3.25);
-      tl.fromTo(q('#s4-c2'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 5.85);
+      tl.fromTo(q('#s4-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.0);
+      tl.fromTo(q('#s4-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.1);
+      tl.fromTo(q('#s4-c1'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 0.35);
+      tl.fromTo(q('#s4-c2'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 2.45);
+      tl.fromTo(q('#s4-c3'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 4.05);
 
       window.__timelines["s4"] = tl;
     })();

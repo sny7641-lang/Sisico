@@ -16,24 +16,28 @@
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 
 #s3 .title { font-size: 84px; }
-#s3 .rk { position: absolute; left: 90px; right: 90px; height: 160px; border-radius: 26px; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; gap: 26px; padding: 0 32px; }
-#s3 .rk.me { border-color: var(--hill); background: var(--hill-soft); }
-#s3 .no { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; color: #0c1519; flex: none; }
-#s3 .no.ipk { background: var(--ipk); } #s3 .no.pru { background: var(--pru); } #s3 .no.hill { background: var(--hill); }
-#s3 .nm { font-size: 44px; font-weight: 800; flex: 1; }
-#s3 .nm small, #s3 .pr small { display: block; font-size: 28px; color: var(--muted); font-weight: 600; margin-top: 4px; }
-#s3 .pr { font-size: 50px; font-weight: 800; text-align: right; color: var(--gold); }
-#s3 .note { position: absolute; left: 90px; right: 90px; top: 1050px; font-size: 28px; color: var(--muted); }
+#s3 .track { position: absolute; left: 150px; width: 780px; top: 560px; height: 12px; border-radius: 6px; background: var(--hill); transform-origin: left center; }
+#s3 .st { position: absolute; top: 538px; width: 56px; height: 56px; border-radius: 50%; background: var(--bg); border: 10px solid var(--hill); }
+#s3 .st.a { left: 122px; } #s3 .st.b { left: 902px; background: var(--hill); }
+#s3 .nm { position: absolute; top: 620px; font-size: 40px; font-weight: 800; width: 300px; }
+#s3 .nm.a { left: 70px; } #s3 .nm.b { left: 800px; text-align: right; width: 230px; }
+#s3 .min { position: absolute; left: 0; right: 0; top: 430px; text-align: center; font-size: 96px; font-weight: 800; color: var(--gold); }
+#s3 .flow { position: absolute; left: 90px; right: 90px; top: 790px; display: flex; align-items: center; gap: 24px; }
+#s3 .box { flex: 1; height: 190px; border-radius: 28px; background: var(--panel); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 44px; font-weight: 800; text-align: center; line-height: 1.25; }
+#s3 .box small { font-size: 30px; color: var(--muted); font-weight: 600; margin-top: 8px; }
+#s3 .box.me { border-color: var(--hill); background: var(--hill-soft); color: var(--hill); }
+#s3 .arr { font-size: 70px; color: var(--gold); font-weight: 800; }
 
   </style>
   <div id="s3" data-composition-id="s3" data-width="1080" data-height="1920">
 
-    <div class="kicker" id="s3-k">지금 · 84㎡ 실거래</div>
-    <div class="title" id="s3-t">순위가 바뀌었다</div>
-    <div class="rk" id="s3-r1" style="top:470px"><span class="no ipk">1</span><span class="nm">아이파크<small>2020년 입주</small></span><span class="pr">7억 중반<small>6.9~8.0억</small></span></div>
-    <div class="rk" id="s3-r2" style="top:660px"><span class="no pru">2</span><span class="nm">센트럴푸르지오<small>2018년 입주</small></span><span class="pr">6억 후반<small>6.5~7.1억</small></span></div>
-    <div class="rk me" id="s3-r3" style="top:850px"><span class="no hill">3</span><span class="nm">힐스테이트운정<small>2018년 입주</small></span><span class="pr">6억 중반<small>6.4~6.7억</small></span></div>
-    <div class="note" id="s3-n">각 단지 84㎡ 최근 실거래 10건 범위 · 국토부</div>
+    <div class="kicker" id="s3-k">GTX-A 운정중앙역</div>
+    <div class="title" id="s3-t">서울 출퇴근</div>
+    <div class="min" id="s3-min">22분</div>
+    <div class="track" id="s3-track"></div>
+    <div class="st a"></div><div class="st b" id="s3-sb"></div>
+    <div class="nm a">운정중앙</div><div class="nm b">서울역</div>
+    <div class="flow" id="s3-flow"><div class="box">서울 출퇴근<small>세입자 · 실수요</small></div><div class="arr">→</div><div class="box me">59㎡<small>작은 평형</small></div></div>
 
   </div>
   <script>
@@ -43,11 +47,10 @@
 
       tl.fromTo(q('#s3-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
       tl.fromTo(q('#s3-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.15);
-      tl.fromTo(q('#s3-r1'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 1.7);
-      tl.fromTo(q('#s3-r2'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 3.3);
-      tl.fromTo(q('#s3-r3'), { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 4.95);
-      tl.fromTo(q('#s3-r3'), { scale: 1 }, { scale: 1.04, duration: 0.25, yoyo: true, repeat: 1, ease: 'power2.out' }, 5.6);
-      tl.fromTo(q('#s3-n'), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.0);
+      tl.fromTo(q('#s3-track'), { scaleX: 0 }, { scaleX: 1, duration: 1.6, ease: 'power2.inOut' }, 0.4);
+      tl.fromTo(q('#s3-sb'), { scale: 0.6 }, { scale: 1, duration: 0.3, ease: 'back.out(2)' }, 1.95);
+      tl.fromTo(q('#s3-min'), { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.8)' }, 1.7);
+      tl.fromTo(q('#s3-flow'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 3.5);
 
       window.__timelines["s3"] = tl;
     })();

@@ -15,13 +15,19 @@ W, H = 1080, 1920
 TOTAL = 42.0
 
 SCENES = [
-    ("s1", 0.0, 6.55),
-    ("s2", 6.55, 17.0),
-    ("s3", 17.0, 24.65),
-    ("s4", 24.65, 32.7),
-    ("s5", 32.7, 35.95),
-    ("s6", 35.95, 42.0),
+    ("s1", 0.0, 5.45),
+    ("s2", 5.45, 13.85),
+    ("s3", 13.85, 21.45),
+    ("s4", 21.45, 29.45),
+    ("s5", 29.45, 33.9),
+    ("s6", 33.9, 42.0),
 ]
+
+# 2026.05.12 ~ 2026.11.12 MOLIT trades (hogangnono monthly-reports), 힐스테이트운정
+STATS = {
+    "59": {"sale": 24, "jeon": 54, "wol": 30},
+    "84": {"sale": 16, "jeon": 34, "wol": 5},
+}
 
 
 def split(groups, t0, t1):
@@ -37,23 +43,21 @@ def split(groups, t0, t1):
 
 
 LINES = [
-    (0.30, split([("한때 운정의 대장은", "한때 운정의 대장은"), ("힐푸아.", "힐푸아.")], 0.0, 1.89)
-          + split([("힐스테이트,", "힐스테이트,")], 2.89, 3.76)
-          + split([("푸르지오,", "푸르지오,")], 4.02, 4.61)
-          + split([("아이파크였습니다.", "아이파크였습니다.")], 4.89, 6.03)),
-    (6.75, split([("2020년 무렵엔 셋 다", "이천이십년 무렵엔 셋 다"), ("84㎡ 고점이 9억 원 안팎.", "팔십사제곱미터 고점이 구억 원 안팎.")], 0.0, 4.33)
-          + split([("하지만 GTX 개통 뒤,", "하지만 GTX 개통 뒤,")], 5.36, 7.10)
-          + split([("연식과 역 거리에서", "연식과 역 거리에서"), ("순위가 갈렸습니다.", "순위가 갈렸습니다.")], 7.48, 10.05)),
-    (17.20, split([("최근 실거래를 보면,", "최근 실거래를 보면,")], 0.0, 1.33)
-          + split([("아이파크 7억 중반,", "아이파크 칠억 중반,")], 1.64, 2.95)
-          + split([("푸르지오 6억 후반,", "푸르지오 육억 후반,")], 3.23, 4.53)
-          + split([("힐스테이트운정은", "힐스테이트운정은"), ("6억 중반입니다.", "육억 중반입니다.")], 4.88, 7.25)),
-    (24.85, split([("고점보다 2억 원 이상", "고점보다 이억 원 이상"), ("낮아진 가격.", "낮아진 가격.")], 0.0, 2.24)
-          + split([("2,998세대 대단지에,", "이천구백구십팔 세대 대단지에,")], 3.26, 5.47)
-          + split([("운정중앙역 도보권입니다.", "운정중앙역 도보권입니다.")], 5.86, 7.65)),
-    (32.90, split([("59㎡는 5억 원 안팎.", "오십구제곱미터는 오억 원 안팎.")], 0.0, 2.19)
-          + split([("힐스테이트운정 매물과 시세,", "힐스테이트운정 매물과 시세,")], 3.22, 5.18)
-          + split([("현대베스트부동산에", "현대베스트부동산에"), ("문의하세요.", "문의하세요.")], 5.50, 7.50)),
+    (0.30, split([("요즘 힐스테이트운정에서", "요즘 힐스테이트운정에서")], 0.0, 1.62)
+          + split([("가장 바쁜 평형,", "가장 바쁜 평형,")], 1.84, 3.07)
+          + split([("59㎡입니다.", "오십구제곱미터입니다.")], 3.40, 4.84)),
+    (5.55, split([("최근 6개월 실거래 108건.", "최근 육개월 실거래 백팔건.")], 0.0, 2.41)
+          + split([("84㎡의 두 배이고,", "팔십사제곱미터의 두 배이고,")], 3.44, 5.45)
+          + split([("월세는 30건 대 5건입니다.", "월세는 삼십건 대 오건입니다.")], 5.80, 8.06)),
+    (14.00, split([("GTX로 서울역까지 22분.", "GTX로 서울역까지 이십이분.")], 0.0, 2.44)
+          + split([("서울로 출퇴근하는 수요가", "서울로 출퇴근하는 수요가"), ("작은 평형으로 몰리고 있습니다.", "작은 평형으로 몰리고 있습니다.")], 3.45, 7.17)),
+    (21.60, split([("59㎡ 매매는 5억 원 안팎,", "오십구제곱미터 매매는 오억 원 안팎,")], 0.0, 1.97)
+          + split([("전세는 3억 원대,", "전세는 삼억 원대,")], 2.33, 3.58)
+          + split([("월세는 보증금 3천5백에", "월세는 보증금 삼천오백에"), ("130만 원 선입니다.", "백삼십만 원 선입니다.")], 3.95, 7.61)),
+    (29.60, split([("2,998세대 대단지에,", "이천구백구십팔 세대 대단지에,")], 0.0, 2.18)
+          + split([("단지 안 초등학교까지.", "단지 안 초등학교까지.")], 2.55, 4.09)),
+    (34.10, split([("힐스테이트운정 59,", "힐스테이트운정 오십구,")], 0.0, 1.21)
+          + split([("매매와 전월세 문의는", "매매와 전월세 문의는"), ("현대베스트부동산으로.", "현대베스트부동산으로.")], 1.36, 4.95)),
 ]
 
 CAPTIONS = []
@@ -127,160 +131,144 @@ COMMON_CSS = """
 
 UP = "{ opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }"
 
-# ---------------- S1: 힐푸아 ----------------
+# ---------------- S1: hook 59㎡ ----------------
 s1 = scene("s1", COMMON_CSS + """
-#s1 .title { top: 300px; font-size: 76px; }
-#s1 .big { position: absolute; left: 90px; right: 90px; top: 400px; font-size: 210px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
-#s1 .big span { display: inline-block; }
-#s1 .big .h { color: var(--hill); } #s1 .big .p { color: var(--pru); } #s1 .big .a { color: var(--ipk); }
-#s1 .row { position: absolute; left: 90px; right: 90px; height: 110px; border-radius: 24px; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; gap: 26px; padding: 0 34px; }
-#s1 .row .k { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 800; color: #0c1519; flex: none; }
-#s1 .row .n { font-size: 46px; font-weight: 800; }
-#s1 #s1-r1 { top: 700px; } #s1 #s1-r2 { top: 830px; } #s1 #s1-r3 { top: 960px; }
-#s1 #s1-r1 .k { background: var(--hill); } #s1 #s1-r2 .k { background: var(--pru); } #s1 #s1-r3 .k { background: var(--ipk); }
-#s1 #s1-r1 { border-color: var(--hill); }
+#s1 .kicker { top: 330px; font-size: 44px; color: var(--ink); }
+#s1 .big { position: absolute; left: 80px; right: 80px; top: 420px; font-size: 330px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--hill); }
+#s1 .big small { font-size: 150px; letter-spacing: -.02em; }
+#s1 .sub { position: absolute; left: 90px; right: 90px; top: 790px; font-size: 54px; font-weight: 800; }
+#s1 .sub b { color: var(--gold); }
+#s1 .tag { position: absolute; left: 90px; top: 900px; padding: 12px 28px; border-radius: 40px; background: var(--hill-soft); border: 2px solid var(--hill); font-size: 36px; font-weight: 700; color: var(--hill); }
 """, """
-    <div class="title" id="s1-t">운정 대장 3인방</div>
-    <div class="big" id="s1-big"><span class="h" id="s1-h">힐</span><span class="p" id="s1-p">푸</span><span class="a" id="s1-a">아</span></div>
-    <div class="row" id="s1-r1"><span class="k">힐</span><span class="n">힐스테이트운정</span></div>
-    <div class="row" id="s1-r2"><span class="k">푸</span><span class="n">운정신도시 센트럴푸르지오</span></div>
-    <div class="row" id="s1-r3"><span class="k">아</span><span class="n">운정신도시 아이파크</span></div>
+    <div class="kicker" id="s1-k">힐스테이트운정, 요즘 가장 바쁜 평형</div>
+    <div class="big" id="s1-big">59<small>㎡</small></div>
+    <div class="sub" id="s1-sub">매매 · 전세 · 월세 <b>모두 활발</b></div>
+    <div class="tag" id="s1-tag">25평형</div>
 """, f"""
-      tl.fromTo(q('#s1-big'), {{ scale: 1 }}, {{ scale: 1.04, duration: 6.5, ease: 'none', transformOrigin: 'left center' }}, 0);
-      tl.fromTo(q('#s1-r1'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 3.1);
-      tl.fromTo(q('#s1-r2'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 4.25);
-      tl.fromTo(q('#s1-r3'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 5.15);
-      tl.fromTo(q('#s1-h'), {{ y: 0 }}, {{ y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }}, 3.1);
-      tl.fromTo(q('#s1-p'), {{ y: 0 }}, {{ y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }}, 4.25);
-      tl.fromTo(q('#s1-a'), {{ y: 0 }}, {{ y: -18, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }}, 5.15);
+      tl.fromTo(q('#s1-big'), {{ scale: 1 }}, {{ scale: 1.05, duration: 5.4, ease: 'none', transformOrigin: 'left center' }}, 0);
+      tl.fromTo(q('#s1-sub'), {UP}, 2.0);
+      tl.fromTo(q('#s1-tag'), {{ opacity: 0, scale: 0.7 }}, {{ opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)' }}, 3.6);
 """)
 
-# ---------------- S2: 2020-21 peaks, then split ----------------
-# bars scaled: 9.7억 -> 760px
-def bw(v, full=9.7, px=760):
-    return int(px * v / full)
-
+# ---------------- S2: 6-month volume ----------------
+PX_PER = 860 / 108
+def seg(n, cls, label):
+    return f'<span class="sg {cls}" style="width:{int(n * PX_PER)}px">{label if n >= 12 else ""}</span>'
+r59 = STATS["59"]; r84 = STATS["84"]
+t59 = sum(r59.values()); t84 = sum(r84.values())
 s2 = scene("s2", COMMON_CSS + """
-#s2 .title { font-size: 80px; }
-#s2 .bar-row { position: absolute; left: 90px; right: 90px; }
-#s2 .bar-row .lab { font-size: 32px; font-weight: 700; display: flex; justify-content: space-between; width: 760px; }
-#s2 .bar-row .lab small { color: var(--muted); font-weight: 600; font-size: 28px; }
-#s2 .bar-row .bar { margin-top: 10px; height: 78px; border-radius: 16px; transform-origin: left center; display: flex; align-items: center; justify-content: flex-end; padding-right: 22px; font-size: 44px; font-weight: 800; color: #0c1519; }
-#s2 #s2-r1 { top: 470px; } #s2 #s2-r2 { top: 620px; } #s2 #s2-r3 { top: 770px; }
-#s2 #s2-b1 { background: var(--hill); } #s2 #s2-b2 { background: var(--pru); } #s2 #s2-b3 { background: var(--ipk); }
-#s2 .split { position: absolute; left: 90px; right: 90px; top: 950px; height: 150px; border-radius: 26px; background: var(--panel2); border: 2px solid var(--gold); display: flex; align-items: center; gap: 24px; padding: 0 36px; }
-#s2 .split .a { font-size: 46px; font-weight: 800; color: var(--gold); white-space: nowrap; }
-#s2 .split .b { font-size: 34px; font-weight: 700; line-height: 1.35; }
+#s2 .title { font-size: 84px; }
+#s2 .row { position: absolute; left: 90px; right: 90px; }
+#s2 .row .lab { font-size: 40px; font-weight: 800; display: flex; align-items: baseline; gap: 16px; }
+#s2 .row .lab b { font-size: 64px; color: var(--gold); }
+#s2 .row .lab small { font-size: 30px; color: var(--muted); font-weight: 600; }
+#s2 .bar { margin-top: 12px; height: 92px; border-radius: 18px; overflow: hidden; display: flex; transform-origin: left center; }
+#s2 .sg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 800; color: #0c1519; }
+#s2 .sg.s { background: var(--gold); } #s2 .sg.j { background: var(--hill); } #s2 .sg.w { background: var(--pru); }
+#s2 #s2-r59 { top: 440px; } #s2 #s2-r84 { top: 650px; }
+#s2 .legend { position: absolute; left: 90px; right: 90px; top: 870px; display: flex; gap: 30px; font-size: 32px; font-weight: 700; }
+#s2 .legend i { display: inline-block; width: 26px; height: 26px; border-radius: 6px; margin-right: 10px; vertical-align: -3px; }
+#s2 .x2 { position: absolute; right: 90px; top: 430px; padding: 10px 26px; border-radius: 34px; background: var(--gold); color: #2b1d00; font-size: 48px; font-weight: 800; }
+#s2 .wol { position: absolute; left: 90px; right: 90px; top: 960px; height: 120px; border-radius: 24px; background: rgba(143,168,255,.14); border: 2px solid var(--pru); display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
+#s2 .wol span { font-size: 38px; font-weight: 800; }
+#s2 .wol b { font-size: 60px; font-weight: 800; color: var(--pru); }
+#s2 .note { position: absolute; left: 90px; right: 90px; top: 1100px; font-size: 28px; color: var(--muted); }
 """, f"""
-    <div class="kicker" id="s2-k">2020~21년 · 84㎡ 최고가</div>
-    <div class="title" id="s2-t">셋 다 9억 안팎</div>
-    <div class="bar-row" id="s2-r1"><div class="lab">힐스테이트운정 <small>2020.11</small></div><div class="bar" id="s2-b1" style="width:{bw(8.99)}px">8.99억</div></div>
-    <div class="bar-row" id="s2-r2"><div class="lab">센트럴푸르지오 <small>2021.10</small></div><div class="bar" id="s2-b2" style="width:{bw(9.4)}px">9.4억</div></div>
-    <div class="bar-row" id="s2-r3"><div class="lab">아이파크 <small>2021.07</small></div><div class="bar" id="s2-b3" style="width:{bw(9.7)}px">9.7억</div></div>
-    <div class="split" id="s2-split"><span class="a">GTX 개통 후</span><span class="b">연식 · 역 거리로<br>순위가 갈렸다</span></div>
+    <div class="kicker" id="s2-k">최근 6개월 · 실거래 건수</div>
+    <div class="title" id="s2-t">59㎡가 2배</div>
+    <div class="row" id="s2-r59"><div class="lab">59㎡ <b>{t59}건</b><small>매매 {r59['sale']} · 전세 {r59['jeon']} · 월세 {r59['wol']}</small></div><div class="bar" id="s2-b59">{seg(r59['sale'],'s','매매')}{seg(r59['jeon'],'j','전세')}{seg(r59['wol'],'w','월세')}</div></div>
+    <div class="row" id="s2-r84"><div class="lab">84㎡ <b>{t84}건</b><small>매매 {r84['sale']} · 전세 {r84['jeon']} · 월세 {r84['wol']}</small></div><div class="bar" id="s2-b84">{seg(r84['sale'],'s','매매')}{seg(r84['jeon'],'j','전세')}{seg(r84['wol'],'w','')}</div></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>매매</span><span><i style="background:var(--hill)"></i>전세</span><span><i style="background:var(--pru)"></i>월세</span></div>
+    <div class="wol" id="s2-wol"><span>월세 거래</span><b>{r59['wol']} : {r84['wol']}</b></div>
 """, f"""
       tl.fromTo(q('#s2-k'), {UP}, 0.05);
       tl.fromTo(q('#s2-t'), {UP}, 0.15);
-      for (let i = 1; i <= 3; i++) {{
-        tl.fromTo(q('#s2-r' + i), {{ opacity: 0 }}, {{ opacity: 1, duration: 0.25 }}, 0.6 + i * 0.35);
-        tl.fromTo(q('#s2-b' + i), {{ scaleX: 0 }}, {{ scaleX: 1, duration: 0.8, ease: 'power3.out' }}, 0.65 + i * 0.35);
-      }}
-      tl.fromTo(q('#s2-split'), {{ opacity: 0, scale: 1.15 }}, {{ opacity: 1, scale: 1, duration: 0.45, ease: 'power4.out' }}, 5.5);
+      tl.fromTo(q('#s2-r59'), {{ opacity: 0 }}, {{ opacity: 1, duration: 0.25 }}, 0.5);
+      tl.fromTo(q('#s2-b59'), {{ scaleX: 0 }}, {{ scaleX: 1, duration: 1.0, ease: 'power3.out' }}, 0.55);
+      tl.fromTo(q('#s2-r84'), {{ opacity: 0 }}, {{ opacity: 1, duration: 0.25 }}, 3.3);
+      tl.fromTo(q('#s2-b84'), {{ scaleX: 0 }}, {{ scaleX: 1, duration: 0.8, ease: 'power3.out' }}, 3.35);
+      tl.fromTo(q('#s2-wol'), {{ opacity: 0, y: 30 }}, {{ opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }}, 5.9);
 """)
 
-# ---------------- S3: current ranking ----------------
-RANK = [
-    ("1", "아이파크", "2020년 입주", "7억 중반", "6.9~8.0억", "ipk", False),
-    ("2", "센트럴푸르지오", "2018년 입주", "6억 후반", "6.5~7.1억", "pru", False),
-    ("3", "힐스테이트운정", "2018년 입주", "6억 중반", "6.4~6.7억", "hill", True),
-]
-s3_rows = "\n".join(
-    f'    <div class="rk{" me" if me else ""}" id="s3-r{i}" style="top:{470 + (i - 1) * 190}px"><span class="no {c}">{n}</span><span class="nm">{nm}<small>{yr}</small></span><span class="pr">{p}<small>{rg}</small></span></div>'
-    for i, (n, nm, yr, p, rg, c, me) in enumerate(RANK, 1))
+# ---------------- S3: Seoul commute ----------------
 s3 = scene("s3", COMMON_CSS + """
 #s3 .title { font-size: 84px; }
-#s3 .rk { position: absolute; left: 90px; right: 90px; height: 160px; border-radius: 26px; background: var(--panel); border: 2px solid var(--line); display: flex; align-items: center; gap: 26px; padding: 0 32px; }
-#s3 .rk.me { border-color: var(--hill); background: var(--hill-soft); }
-#s3 .no { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; color: #0c1519; flex: none; }
-#s3 .no.ipk { background: var(--ipk); } #s3 .no.pru { background: var(--pru); } #s3 .no.hill { background: var(--hill); }
-#s3 .nm { font-size: 44px; font-weight: 800; flex: 1; }
-#s3 .nm small, #s3 .pr small { display: block; font-size: 28px; color: var(--muted); font-weight: 600; margin-top: 4px; }
-#s3 .pr { font-size: 50px; font-weight: 800; text-align: right; color: var(--gold); }
-#s3 .note { position: absolute; left: 90px; right: 90px; top: 1050px; font-size: 28px; color: var(--muted); }
-""", s3_rows.join(["""
-    <div class="kicker" id="s3-k">지금 · 84㎡ 실거래</div>
-    <div class="title" id="s3-t">순위가 바뀌었다</div>
+#s3 .track { position: absolute; left: 150px; width: 780px; top: 560px; height: 12px; border-radius: 6px; background: var(--hill); transform-origin: left center; }
+#s3 .st { position: absolute; top: 538px; width: 56px; height: 56px; border-radius: 50%; background: var(--bg); border: 10px solid var(--hill); }
+#s3 .st.a { left: 122px; } #s3 .st.b { left: 902px; background: var(--hill); }
+#s3 .nm { position: absolute; top: 620px; font-size: 40px; font-weight: 800; width: 300px; }
+#s3 .nm.a { left: 70px; } #s3 .nm.b { left: 800px; text-align: right; width: 230px; }
+#s3 .min { position: absolute; left: 0; right: 0; top: 430px; text-align: center; font-size: 96px; font-weight: 800; color: var(--gold); }
+#s3 .flow { position: absolute; left: 90px; right: 90px; top: 790px; display: flex; align-items: center; gap: 24px; }
+#s3 .box { flex: 1; height: 190px; border-radius: 28px; background: var(--panel); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 44px; font-weight: 800; text-align: center; line-height: 1.25; }
+#s3 .box small { font-size: 30px; color: var(--muted); font-weight: 600; margin-top: 8px; }
+#s3 .box.me { border-color: var(--hill); background: var(--hill-soft); color: var(--hill); }
+#s3 .arr { font-size: 70px; color: var(--gold); font-weight: 800; }
 """, """
-    <div class="note" id="s3-n">각 단지 84㎡ 최근 실거래 10건 범위 · 국토부</div>
-"""]), f"""
+    <div class="kicker" id="s3-k">GTX-A 운정중앙역</div>
+    <div class="title" id="s3-t">서울 출퇴근</div>
+    <div class="min" id="s3-min">22분</div>
+    <div class="track" id="s3-track"></div>
+    <div class="st a"></div><div class="st b" id="s3-sb"></div>
+    <div class="nm a">운정중앙</div><div class="nm b">서울역</div>
+    <div class="flow" id="s3-flow"><div class="box">서울 출퇴근<small>세입자 · 실수요</small></div><div class="arr">→</div><div class="box me">59㎡<small>작은 평형</small></div></div>
+""", f"""
       tl.fromTo(q('#s3-k'), {UP}, 0.05);
       tl.fromTo(q('#s3-t'), {UP}, 0.15);
-      tl.fromTo(q('#s3-r1'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 1.7);
-      tl.fromTo(q('#s3-r2'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 3.3);
-      tl.fromTo(q('#s3-r3'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 4.95);
-      tl.fromTo(q('#s3-r3'), {{ scale: 1 }}, {{ scale: 1.04, duration: 0.25, yoyo: true, repeat: 1, ease: 'power2.out' }}, 5.6);
-      tl.fromTo(q('#s3-n'), {{ opacity: 0 }}, {{ opacity: 1, duration: 0.4 }}, 1.0);
+      tl.fromTo(q('#s3-track'), {{ scaleX: 0 }}, {{ scaleX: 1, duration: 1.6, ease: 'power2.inOut' }}, 0.4);
+      tl.fromTo(q('#s3-sb'), {{ scale: 0.6 }}, {{ scale: 1, duration: 0.3, ease: 'back.out(2)' }}, 1.95);
+      tl.fromTo(q('#s3-min'), {{ opacity: 0, scale: 0.8 }}, {{ opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.8)' }}, 1.7);
+      tl.fromTo(q('#s3-flow'), {{ opacity: 0, y: 40 }}, {{ opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }}, 3.5);
 """)
 
-# ---------------- S4: Hillstate spotlight ----------------
+# ---------------- S4: 59㎡ prices ----------------
+CARDS = [
+    ("매매", "4.95", "억", "중간값 · 4.68~5.4억 · 24건", "gold"),
+    ("전세", "3.1", "억", "중간값 · 최근 3.5억 · 54건", "hill"),
+    ("월세", "3,500 / 130", "", "보증금 / 월(만원) 중간값 · 30건", "pru"),
+]
+s4_cards = "\n".join(
+    f'    <div class="cd" id="s4-c{i}" style="top:{420 + (i - 1) * 215}px"><span class="kd {c}">{k}</span><span class="v">{v}<small>{u}</small></span><span class="n">{n}</span></div>'
+    for i, (k, v, u, n, c) in enumerate(CARDS, 1))
 s4 = scene("s4", COMMON_CSS + """
-#s4 .title { font-size: 88px; color: var(--hill); }
-#s4 .card { position: absolute; left: 70px; right: 70px; top: 420px; height: 330px; border-radius: 32px; background: var(--panel); border: 2px solid var(--line); }
-#s4 .from { position: absolute; left: 50px; top: 44px; font-size: 34px; color: var(--muted); font-weight: 600; }
-#s4 .from s { color: var(--muted); }
-#s4 .now { position: absolute; left: 50px; top: 100px; font-size: 130px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
-#s4 .now small { font-size: 56px; }
-#s4 .delta { position: absolute; right: 44px; top: 128px; padding: 10px 24px; border-radius: 30px; background: rgba(111,182,255,.16); color: var(--down); font-size: 44px; font-weight: 800; }
-#s4 .when { position: absolute; left: 50px; top: 255px; font-size: 28px; color: var(--muted); }
-#s4 .chips { position: absolute; left: 70px; right: 70px; top: 790px; display: flex; flex-direction: column; gap: 22px; }
-#s4 .chip { height: 104px; border-radius: 24px; background: var(--hill-soft); border: 2px solid var(--hill); display: flex; align-items: center; gap: 22px; padding: 0 32px; font-size: 46px; font-weight: 800; }
-#s4 .chip i { font-style: normal; width: 54px; height: 54px; border-radius: 50%; background: var(--hill); color: #0c1519; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+#s4 .title { font-size: 80px; }
+#s4 .cd { position: absolute; left: 70px; right: 70px; height: 190px; border-radius: 28px; background: var(--panel); border: 2px solid var(--line); }
+#s4 .kd { position: absolute; left: 36px; top: 34px; padding: 6px 22px; border-radius: 24px; font-size: 32px; font-weight: 800; color: #0c1519; }
+#s4 .kd.gold { background: var(--gold); } #s4 .kd.hill { background: var(--hill); } #s4 .kd.pru { background: var(--pru); }
+#s4 .v { position: absolute; right: 40px; top: 22px; font-size: 92px; font-weight: 800; letter-spacing: -.02em; }
+#s4 .v small { font-size: 46px; }
+#s4 .n { position: absolute; left: 36px; right: 40px; bottom: 26px; font-size: 28px; color: var(--muted); font-weight: 600; }
+#s4 .note { position: absolute; left: 90px; right: 90px; top: 1075px; font-size: 28px; color: var(--muted); }
 """, """
-    <div class="kicker" id="s4-k">84㎡ · 고점 대비</div>
-    <div class="title" id="s4-t">힐스테이트운정</div>
-    <div class="card" id="s4-card">
-      <div class="from">2020.11 최고가 <s>8.99억</s> →</div>
-      <div class="now"><span id="s4-num">6.5</span><small>억</small></div>
-      <div class="delta" id="s4-d">−2.49억</div>
-      <div class="when">2026.11.7 실거래 · 13층 · 국토부</div>
-    </div>
-    <div class="chips">
-      <div class="chip" id="s4-c1"><i>✓</i>2,998세대 대단지</div>
-      <div class="chip" id="s4-c2"><i>✓</i>운정중앙역 도보권</div>
-    </div>
-""", f"""
-      tl.fromTo(q('#s4-k'), {UP}, 0.05);
-      tl.fromTo(q('#s4-t'), {UP}, 0.15);
-      tl.fromTo(q('#s4-card'), {{ opacity: 0, y: 50 }}, {{ opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }}, 0.3);
-      const c = {{ v: 8.99 }};
-      tl.fromTo(c, {{ v: 8.99 }}, {{ v: 6.5, duration: 1.4, ease: 'power3.out', onUpdate: () => {{ q('#s4-num').textContent = c.v.toFixed(2).replace(/0$/, ''); }} }}, 0.5);
-      tl.set(q('#s4-num'), {{ textContent: '6.5' }}, 1.95);
-      tl.fromTo(q('#s4-d'), {{ opacity: 0, scale: 0.6 }}, {{ opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }}, 1.9);
-      tl.fromTo(q('#s4-c1'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 3.25);
-      tl.fromTo(q('#s4-c2'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 5.85);
+    <div class="kicker" id="s4-k">힐스테이트운정 59㎡ · 최근 6개월</div>
+    <div class="title" id="s4-t">얼마에 거래됐나</div>
+""" + s4_cards, f"""
+      tl.fromTo(q('#s4-k'), {UP}, 0.0);
+      tl.fromTo(q('#s4-t'), {UP}, 0.1);
+      tl.fromTo(q('#s4-c1'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 0.35);
+      tl.fromTo(q('#s4-c2'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 2.45);
+      tl.fromTo(q('#s4-c3'), {{ opacity: 0, x: 50 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 4.05);
 """)
 
-# ---------------- S5: 59㎡ ----------------
+# ---------------- S5: complex strengths ----------------
 s5 = scene("s5", COMMON_CSS + """
-#s5 .title { font-size: 80px; }
-#s5 .card { position: absolute; left: 70px; right: 70px; top: 470px; height: 420px; border-radius: 32px; background: var(--hill-soft); border: 3px solid var(--hill); }
-#s5 .sz { position: absolute; left: 50px; top: 46px; font-size: 44px; font-weight: 800; }
-#s5 .sz small { font-size: 30px; color: var(--muted); font-weight: 600; margin-left: 10px; }
-#s5 .pr { position: absolute; left: 50px; top: 120px; font-size: 170px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
-#s5 .pr small { font-size: 70px; }
-#s5 .when { position: absolute; left: 50px; top: 320px; font-size: 30px; color: var(--muted); }
+#s5 .title { font-size: 84px; color: var(--hill); }
+#s5 .chip { position: absolute; left: 70px; right: 70px; height: 150px; border-radius: 28px; background: var(--hill-soft); border: 2px solid var(--hill); display: flex; align-items: center; gap: 26px; padding: 0 36px; font-size: 56px; font-weight: 800; }
+#s5 .chip i { font-style: normal; width: 66px; height: 66px; border-radius: 50%; background: var(--hill); color: #0c1519; display: flex; align-items: center; justify-content: center; font-size: 38px; flex: none; }
+#s5 .chip small { display: block; font-size: 30px; color: var(--muted); font-weight: 600; }
+#s5 #s5-c1 { top: 470px; } #s5 #s5-c2 { top: 650px; } #s5 #s5-c3 { top: 830px; }
 """, """
-    <div class="kicker" id="s5-k">작은 평형도</div>
-    <div class="title" id="s5-t">힐스테이트운정 59㎡</div>
-    <div class="card" id="s5-card">
-      <div class="sz">전용 59㎡<small>25평형</small></div>
-      <div class="pr">5<small>억 안팎</small></div>
-      <div class="when">최근 실거래 4.7~5.0억 · 2026.10~11 · 국토부</div>
-    </div>
+    <div class="kicker" id="s5-k">2018년 입주</div>
+    <div class="title" id="s5-t">힐스테이트운정</div>
+    <div class="chip" id="s5-c1"><i>✓</i><span>2,998세대<small>대단지</small></span></div>
+    <div class="chip" id="s5-c2"><i>✓</i><span>단지 안 초등학교<small>산내초</small></span></div>
+    <div class="chip" id="s5-c3"><i>✓</i><span>운정중앙역<small>도보권</small></span></div>
 """, f"""
-      tl.fromTo(q('#s5-k'), {UP}, 0.05);
-      tl.fromTo(q('#s5-t'), {UP}, 0.12);
-      tl.fromTo(q('#s5-card'), {{ opacity: 0, scale: 0.92 }}, {{ opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.6)' }}, 0.25);
+      tl.fromTo(q('#s5-k'), {UP}, 0.0);
+      tl.fromTo(q('#s5-t'), {UP}, 0.1);
+      tl.fromTo(q('#s5-c1'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 0.25);
+      tl.fromTo(q('#s5-c2'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 2.7);
+      tl.fromTo(q('#s5-c3'), {{ opacity: 0, x: -40 }}, {{ opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }}, 3.2);
 """)
 
 # ---------------- S6: outro ----------------
@@ -292,10 +280,10 @@ s6 = scene("s6", """
 #s6 .note { position: absolute; left: 60px; right: 60px; top: 1265px; text-align: center; font-size: 28px; color: var(--muted); }
 """, """
     <img class="logo" id="s6-logo" src="assets/images/logo.png" alt="현대베스트부동산" />
-    <div class="ask" id="s6-ask">힐스테이트운정 매물 · 시세 문의</div>
+    <div class="ask" id="s6-ask">힐스테이트운정 59㎡ 매매 · 전월세 문의</div>
     <div class="name" id="s6-name">현대베스트부동산</div>
     <div class="tel" id="s6-tel">031-949-6649</div>
-    <div class="note" id="s6-n">시세: 국토부 실거래가(2026.11 기준) · 투자 권유 아님</div>
+    <div class="note" id="s6-n">실거래: 국토부(2026.5.12~11.12) · 투자 권유 아님</div>
 """, """
       tl.fromTo(q('#s6-logo'), { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' }, 0.0);
       tl.fromTo(q('#s6-ask'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.25);

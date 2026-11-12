@@ -15,24 +15,20 @@
 .kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 34px; font-weight: 600; color: var(--hill); letter-spacing: .02em; }
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 
-#s5 .title { font-size: 80px; }
-#s5 .card { position: absolute; left: 70px; right: 70px; top: 470px; height: 420px; border-radius: 32px; background: var(--hill-soft); border: 3px solid var(--hill); }
-#s5 .sz { position: absolute; left: 50px; top: 46px; font-size: 44px; font-weight: 800; }
-#s5 .sz small { font-size: 30px; color: var(--muted); font-weight: 600; margin-left: 10px; }
-#s5 .pr { position: absolute; left: 50px; top: 120px; font-size: 170px; font-weight: 800; color: var(--gold); letter-spacing: -.03em; line-height: 1; }
-#s5 .pr small { font-size: 70px; }
-#s5 .when { position: absolute; left: 50px; top: 320px; font-size: 30px; color: var(--muted); }
+#s5 .title { font-size: 84px; color: var(--hill); }
+#s5 .chip { position: absolute; left: 70px; right: 70px; height: 150px; border-radius: 28px; background: var(--hill-soft); border: 2px solid var(--hill); display: flex; align-items: center; gap: 26px; padding: 0 36px; font-size: 56px; font-weight: 800; }
+#s5 .chip i { font-style: normal; width: 66px; height: 66px; border-radius: 50%; background: var(--hill); color: #0c1519; display: flex; align-items: center; justify-content: center; font-size: 38px; flex: none; }
+#s5 .chip small { display: block; font-size: 30px; color: var(--muted); font-weight: 600; }
+#s5 #s5-c1 { top: 470px; } #s5 #s5-c2 { top: 650px; } #s5 #s5-c3 { top: 830px; }
 
   </style>
   <div id="s5" data-composition-id="s5" data-width="1080" data-height="1920">
 
-    <div class="kicker" id="s5-k">작은 평형도</div>
-    <div class="title" id="s5-t">힐스테이트운정 59㎡</div>
-    <div class="card" id="s5-card">
-      <div class="sz">전용 59㎡<small>25평형</small></div>
-      <div class="pr">5<small>억 안팎</small></div>
-      <div class="when">최근 실거래 4.7~5.0억 · 2026.10~11 · 국토부</div>
-    </div>
+    <div class="kicker" id="s5-k">2018년 입주</div>
+    <div class="title" id="s5-t">힐스테이트운정</div>
+    <div class="chip" id="s5-c1"><i>✓</i><span>2,998세대<small>대단지</small></span></div>
+    <div class="chip" id="s5-c2"><i>✓</i><span>단지 안 초등학교<small>산내초</small></span></div>
+    <div class="chip" id="s5-c3"><i>✓</i><span>운정중앙역<small>도보권</small></span></div>
 
   </div>
   <script>
@@ -40,9 +36,11 @@
       const tl = gsap.timeline({ paused: true });
       const q = (s) => document.querySelector("#s5 " + s);
 
-      tl.fromTo(q('#s5-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
-      tl.fromTo(q('#s5-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.12);
-      tl.fromTo(q('#s5-card'), { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.6)' }, 0.25);
+      tl.fromTo(q('#s5-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.0);
+      tl.fromTo(q('#s5-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.1);
+      tl.fromTo(q('#s5-c1'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 0.25);
+      tl.fromTo(q('#s5-c2'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 2.7);
+      tl.fromTo(q('#s5-c3'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 3.2);
 
       window.__timelines["s5"] = tl;
     })();
