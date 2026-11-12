@@ -1,0 +1,56 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s2 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0c1519; --panel: #13232a; --panel2: #1a2f37; --line: #27424c;
+  --ink: #f3f1ea; --muted: #93a7ad; --hill: #3fd0b0; --hill-soft: rgba(63,208,176,.16);
+  --gold: #f2c14e; --pru: #8fa8ff; --ipk: #ff8f6b; --down: #6fb6ff;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 34px; font-weight: 600; color: var(--hill); letter-spacing: .02em; }
+.title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+
+#s2 .title { font-size: 80px; }
+#s2 .bar-row { position: absolute; left: 90px; right: 90px; }
+#s2 .bar-row .lab { font-size: 32px; font-weight: 700; display: flex; justify-content: space-between; width: 760px; }
+#s2 .bar-row .lab small { color: var(--muted); font-weight: 600; font-size: 28px; }
+#s2 .bar-row .bar { margin-top: 10px; height: 78px; border-radius: 16px; transform-origin: left center; display: flex; align-items: center; justify-content: flex-end; padding-right: 22px; font-size: 44px; font-weight: 800; color: #0c1519; }
+#s2 #s2-r1 { top: 470px; } #s2 #s2-r2 { top: 620px; } #s2 #s2-r3 { top: 770px; }
+#s2 #s2-b1 { background: var(--hill); } #s2 #s2-b2 { background: var(--pru); } #s2 #s2-b3 { background: var(--ipk); }
+#s2 .split { position: absolute; left: 90px; right: 90px; top: 950px; height: 150px; border-radius: 26px; background: var(--panel2); border: 2px solid var(--gold); display: flex; align-items: center; gap: 24px; padding: 0 36px; }
+#s2 .split .a { font-size: 46px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+#s2 .split .b { font-size: 34px; font-weight: 700; line-height: 1.35; }
+
+  </style>
+  <div id="s2" data-composition-id="s2" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s2-k">2020~21년 · 84㎡ 최고가</div>
+    <div class="title" id="s2-t">셋 다 9억 안팎</div>
+    <div class="bar-row" id="s2-r1"><div class="lab">힐스테이트운정 <small>2020.11</small></div><div class="bar" id="s2-b1" style="width:704px">8.99억</div></div>
+    <div class="bar-row" id="s2-r2"><div class="lab">센트럴푸르지오 <small>2021.10</small></div><div class="bar" id="s2-b2" style="width:736px">9.4억</div></div>
+    <div class="bar-row" id="s2-r3"><div class="lab">아이파크 <small>2021.07</small></div><div class="bar" id="s2-b3" style="width:760px">9.7억</div></div>
+    <div class="split" id="s2-split"><span class="a">GTX 개통 후</span><span class="b">연식 · 역 거리로<br>순위가 갈렸다</span></div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s2 " + s);
+
+      tl.fromTo(q('#s2-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s2-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.15);
+      for (let i = 1; i <= 3; i++) {
+        tl.fromTo(q('#s2-r' + i), { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.6 + i * 0.35);
+        tl.fromTo(q('#s2-b' + i), { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power3.out' }, 0.65 + i * 0.35);
+      }
+      tl.fromTo(q('#s2-split'), { opacity: 0, scale: 1.15 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'power4.out' }, 5.5);
+
+      window.__timelines["s2"] = tl;
+    })();
+  </script>
+</template>

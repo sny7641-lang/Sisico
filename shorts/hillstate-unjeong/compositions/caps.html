@@ -1,0 +1,120 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #caps { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0c1519; --panel: #13232a; --panel2: #1a2f37; --line: #27424c;
+  --ink: #f3f1ea; --muted: #93a7ad; --hill: #3fd0b0; --hill-soft: rgba(63,208,176,.16);
+  --gold: #f2c14e; --pru: #8fa8ff; --ipk: #ff8f6b; --down: #6fb6ff;
+ }
+    
+#caps .cg { position: absolute; left: 0; right: 0; top: 1150px; text-align: center; overflow: visible; opacity: 0; }
+#caps .cg span { display: inline-block; padding: 10px 26px; border-radius: 16px; background: rgba(4,10,12,.66); font-weight: 700; color: #fff; letter-spacing: -.01em; }
+
+  </style>
+  <div id="caps" data-composition-id="caps" data-width="1080" data-height="1920">
+    <div class="cg" id="cap-0"><span style="font-size:64px">한때 운정의 대장은</span></div>
+    <div class="cg" id="cap-1"><span style="font-size:64px">힐푸아.</span></div>
+    <div class="cg" id="cap-2"><span style="font-size:64px">힐스테이트,</span></div>
+    <div class="cg" id="cap-3"><span style="font-size:64px">푸르지오,</span></div>
+    <div class="cg" id="cap-4"><span style="font-size:64px">아이파크였습니다.</span></div>
+    <div class="cg" id="cap-5"><span style="font-size:64px">2020년 무렵엔 셋 다</span></div>
+    <div class="cg" id="cap-6"><span style="font-size:64px">84㎡ 고점이 9억 원 안팎.</span></div>
+    <div class="cg" id="cap-7"><span style="font-size:64px">하지만 GTX 개통 뒤,</span></div>
+    <div class="cg" id="cap-8"><span style="font-size:64px">연식과 역 거리에서</span></div>
+    <div class="cg" id="cap-9"><span style="font-size:64px">순위가 갈렸습니다.</span></div>
+    <div class="cg" id="cap-10"><span style="font-size:64px">최근 실거래를 보면,</span></div>
+    <div class="cg" id="cap-11"><span style="font-size:64px">아이파크 7억 중반,</span></div>
+    <div class="cg" id="cap-12"><span style="font-size:64px">푸르지오 6억 후반,</span></div>
+    <div class="cg" id="cap-13"><span style="font-size:64px">힐스테이트운정은</span></div>
+    <div class="cg" id="cap-14"><span style="font-size:64px">6억 중반입니다.</span></div>
+    <div class="cg" id="cap-15"><span style="font-size:64px">고점보다 2억 원 이상</span></div>
+    <div class="cg" id="cap-16"><span style="font-size:64px">낮아진 가격.</span></div>
+    <div class="cg" id="cap-17"><span style="font-size:64px">2,998세대 대단지에,</span></div>
+    <div class="cg" id="cap-18"><span style="font-size:64px">운정중앙역 도보권입니다.</span></div>
+    <div class="cg" id="cap-19"><span style="font-size:64px">59㎡는 5억 원 안팎.</span></div>
+    <div class="cg" id="cap-20"><span style="font-size:64px">힐스테이트운정 매물과 시세,</span></div>
+    <div class="cg" id="cap-21"><span style="font-size:64px">현대베스트부동산에</span></div>
+    <div class="cg" id="cap-22"><span style="font-size:64px">문의하세요.</span></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#caps " + s);
+      tl.fromTo(q('#cap-0'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 0.25);
+      tl.to(q('#cap-0'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 1.45);
+      tl.set(q('#cap-0'), { opacity: 0, visibility: 'hidden' }, 1.55);
+      tl.fromTo(q('#cap-1'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 1.55);
+      tl.to(q('#cap-1'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 2.17);
+      tl.set(q('#cap-1'), { opacity: 0, visibility: 'hidden' }, 2.27);
+      tl.fromTo(q('#cap-2'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 3.14);
+      tl.to(q('#cap-2'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 4.04);
+      tl.set(q('#cap-2'), { opacity: 0, visibility: 'hidden' }, 4.14);
+      tl.fromTo(q('#cap-3'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 4.27);
+      tl.to(q('#cap-3'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 4.89);
+      tl.set(q('#cap-3'), { opacity: 0, visibility: 'hidden' }, 4.99);
+      tl.fromTo(q('#cap-4'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 5.14);
+      tl.to(q('#cap-4'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 6.31);
+      tl.set(q('#cap-4'), { opacity: 0, visibility: 'hidden' }, 6.41);
+      tl.fromTo(q('#cap-5'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 6.7);
+      tl.to(q('#cap-5'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 8.29);
+      tl.set(q('#cap-5'), { opacity: 0, visibility: 'hidden' }, 8.39);
+      tl.fromTo(q('#cap-6'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 8.39);
+      tl.to(q('#cap-6'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 11.06);
+      tl.set(q('#cap-6'), { opacity: 0, visibility: 'hidden' }, 11.16);
+      tl.fromTo(q('#cap-7'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 12.06);
+      tl.to(q('#cap-7'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 13.83);
+      tl.set(q('#cap-7'), { opacity: 0, visibility: 'hidden' }, 13.93);
+      tl.fromTo(q('#cap-8'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 14.18);
+      tl.to(q('#cap-8'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 15.32);
+      tl.set(q('#cap-8'), { opacity: 0, visibility: 'hidden' }, 15.42);
+      tl.fromTo(q('#cap-9'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 15.42);
+      tl.to(q('#cap-9'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 16.78);
+      tl.set(q('#cap-9'), { opacity: 0, visibility: 'hidden' }, 16.88);
+      tl.fromTo(q('#cap-10'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 17.15);
+      tl.to(q('#cap-10'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 18.51);
+      tl.set(q('#cap-10'), { opacity: 0, visibility: 'hidden' }, 18.61);
+      tl.fromTo(q('#cap-11'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 18.79);
+      tl.to(q('#cap-11'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 20.13);
+      tl.set(q('#cap-11'), { opacity: 0, visibility: 'hidden' }, 20.23);
+      tl.fromTo(q('#cap-12'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 20.38);
+      tl.to(q('#cap-12'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 21.71);
+      tl.set(q('#cap-12'), { opacity: 0, visibility: 'hidden' }, 21.81);
+      tl.fromTo(q('#cap-13'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 22.03);
+      tl.to(q('#cap-13'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 23.15);
+      tl.set(q('#cap-13'), { opacity: 0, visibility: 'hidden' }, 23.25);
+      tl.fromTo(q('#cap-14'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 23.25);
+      tl.to(q('#cap-14'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 24.43);
+      tl.set(q('#cap-14'), { opacity: 0, visibility: 'hidden' }, 24.53);
+      tl.fromTo(q('#cap-15'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 24.8);
+      tl.to(q('#cap-15'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 26.08);
+      tl.set(q('#cap-15'), { opacity: 0, visibility: 'hidden' }, 26.18);
+      tl.fromTo(q('#cap-16'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 26.18);
+      tl.to(q('#cap-16'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 27.07);
+      tl.set(q('#cap-16'), { opacity: 0, visibility: 'hidden' }, 27.17);
+      tl.fromTo(q('#cap-17'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 28.06);
+      tl.to(q('#cap-17'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 30.3);
+      tl.set(q('#cap-17'), { opacity: 0, visibility: 'hidden' }, 30.4);
+      tl.fromTo(q('#cap-18'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 30.66);
+      tl.to(q('#cap-18'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 32.48);
+      tl.set(q('#cap-18'), { opacity: 0, visibility: 'hidden' }, 32.58);
+      tl.fromTo(q('#cap-19'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 32.85);
+      tl.to(q('#cap-19'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 35.07);
+      tl.set(q('#cap-19'), { opacity: 0, visibility: 'hidden' }, 35.17);
+      tl.fromTo(q('#cap-20'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 36.07);
+      tl.to(q('#cap-20'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 38.06);
+      tl.set(q('#cap-20'), { opacity: 0, visibility: 'hidden' }, 38.16);
+      tl.fromTo(q('#cap-21'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 38.35);
+      tl.to(q('#cap-21'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 39.48);
+      tl.set(q('#cap-21'), { opacity: 0, visibility: 'hidden' }, 39.58);
+      tl.fromTo(q('#cap-22'), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.16, ease: 'power2.out' }, 39.58);
+      tl.to(q('#cap-22'), { opacity: 0, duration: 0.1, ease: 'power2.in' }, 40.38);
+      tl.set(q('#cap-22'), { opacity: 0, visibility: 'hidden' }, 40.48);
+      window.__timelines["caps"] = tl;
+    })();
+  </script>
+</template>
