@@ -16,15 +16,20 @@
 .title  { position: absolute; left: 90px; right: 90px; top: 285px; font-size: 92px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
 .src    { position: absolute; left: 90px; right: 90px; top: 1040px; font-size: 26px; color: var(--muted); }
 
-#s6 .big { position: absolute; left: 90px; right: 90px; top: 560px; font-size: 64px; font-weight: 800; line-height: 1.3; text-align: center; }
-#s6 .big b { color: var(--violet); }
-#s6 .note { position: absolute; left: 90px; right: 90px; top: 800px; font-size: 30px; color: var(--muted); text-align: center; line-height: 1.6; }
+#s6 .logo { position: absolute; left: 50%; top: 250px; width: 440px; margin-left: -220px; border-radius: 44px; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+#s6 .name { position: absolute; left: 60px; right: 60px; top: 745px; text-align: center; font-size: 76px; font-weight: 800; letter-spacing: -.02em; }
+#s6 .tel { position: absolute; left: 60px; right: 60px; top: 845px; text-align: center; font-size: 112px; font-weight: 800; color: var(--gold); letter-spacing: -.01em; }
+#s6 .ask { position: absolute; left: 60px; right: 60px; top: 990px; text-align: center; font-size: 40px; font-weight: 700; color: var(--violet); }
+#s6 .note { position: absolute; left: 60px; right: 60px; top: 1150px; text-align: center; font-size: 28px; color: var(--muted); line-height: 1.55; }
 
   </style>
   <div id="s6" data-composition-id="s6" data-width="1080" data-height="1920">
 
-    <div class="big" id="s6-b">GTX 운정중앙역<br><b>시세 체크</b></div>
-    <div class="note" id="s6-n">투자 권유가 아닌 정보 제공 영상입니다<br>출처: 국토부 실거래가 · 스트레이트뉴스(26.11.1)<br>헤럴드경제(26.11.3) · 파이낸셜뉴스(26.11.11)</div>
+    <img class="logo" id="s6-logo" src="assets/images/logo.png" alt="현대베스트부동산" />
+    <div class="name" id="s6-name">현대베스트부동산</div>
+    <div class="tel" id="s6-tel">031-949-6649</div>
+    <div class="ask" id="s6-ask">운정중앙역 시세 · 매물 문의</div>
+    <div class="note" id="s6-n">투자 권유가 아닌 정보 제공 영상입니다<br>출처: 국토부 실거래가 · 스트레이트뉴스 · 헤럴드경제 · 파이낸셜뉴스</div>
 
   </div>
   <script>
@@ -32,8 +37,11 @@
       const tl = gsap.timeline({ paused: true });
       const q = (s) => document.querySelector("#s6 " + s);
 
-      tl.fromTo(q('#s6-b'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.0);
-      tl.fromTo(q('#s6-n'), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.2);
+      tl.fromTo(q('#s6-logo'), { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' }, 0.0);
+      tl.fromTo(q('#s6-name'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.25);
+      tl.fromTo(q('#s6-tel'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.4);
+      tl.fromTo(q('#s6-ask'), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.6);
+      tl.fromTo(q('#s6-n'), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0.7);
 
       window.__timelines["s6"] = tl;
     })();
