@@ -259,7 +259,7 @@ s4 = scene("s4", 6.95, COMMON_CSS + """
 #s4 .when span { color: var(--gold); }
 """, f"""
     <div class="kicker" id="s4-k">GTX-A 전 구간 연결</div>
-    <div class="title" id="s4-t">다음 열쇠, <b>삼성역</b></div>
+    <div class="title" id="s4-t">열쇠는 <b>삼성역</b></div>
     <div class="rail"></div>
     <div class="gap"></div>
     <div class="gapfill" id="s4-fill"></div>
@@ -348,6 +348,7 @@ index = f"""<!doctype html>
       #grid {{ position: absolute; inset: -80px; z-index: 1; opacity: .35;
               background-image: linear-gradient(rgba(255,255,255,.05) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.05) 2px, transparent 2px);
               background-size: 80px 80px; }}
+      #logo {{ position: absolute; right: 36px; top: 178px; width: 170px; height: auto; z-index: 6; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }}
       #foot {{ position: absolute; left: 0; right: 0; top: 1360px; z-index: 1; text-align: center; font-family: 'Pretendard', sans-serif; font-size: 28px; color: rgba(154,166,189,.55); font-weight: 600; letter-spacing: .3em; }}
     </style>
   </head>
@@ -356,6 +357,7 @@ index = f"""<!doctype html>
       <div id="bg"></div>
       <div id="grid"></div>
       <div id="foot" data-layout-ignore>PAJU · UNJEONG · GTX-A</div>
+      <img id="logo" src="assets/images/logo.png" alt="현대베스트부동산 031-949-6649" />
 {hosts}
       <div id="caps" data-composition-id="caps" data-composition-src="compositions/caps.html" data-start="0" data-duration="{TOTAL}" data-track-index="2" data-track-kind="captions" data-width="{W}" data-height="{H}" style="z-index:5"></div>
       <audio id="mix" src="assets/audio/mix.wav" data-start="0" data-duration="{TOTAL}" data-track-index="3"></audio>
