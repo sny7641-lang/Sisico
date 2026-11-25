@@ -1,0 +1,62 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s2 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0c1519; --panel: #13232a; --line: #27424c;
+  --ink: #f3f1ea; --muted: #93a7ad; --hill: #3fd0b0; --hill-soft: rgba(63,208,176,.16);
+  --gold: #f2c14e; --pru: #8fa8ff; --up: #ff7a6b;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 36px; font-weight: 700; color: var(--hill); }
+.title  { position: absolute; left: 90px; right: 90px; top: 290px; font-size: 90px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.badge { display: inline-block; padding: 6px 22px; border-radius: 24px; font-size: 32px; font-weight: 800; color: #0c1519; }
+.fine { position: absolute; left: 90px; right: 90px; top: 1290px; font-size: 26px; color: var(--muted); font-weight: 600; }
+
+.cmp { position: absolute; left: 70px; right: 70px; top: 470px; height: 330px; display: flex; align-items: center; gap: 20px; }
+.cmp .bx { flex: 1; height: 100%; border-radius: 30px; background: var(--panel); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cmp .bx.now { border-color: var(--gold); background: rgba(242,193,78,.10); }
+.cmp .bx small { font-size: 32px; font-weight: 700; color: var(--muted); }
+.cmp .bx b { font-size: 84px; font-weight: 800; letter-spacing: -.03em; margin-top: 6px; }
+.cmp .bx.now b { color: var(--gold); }
+.cmp .bx em { font-style: normal; font-size: 30px; color: var(--muted); font-weight: 600; margin-top: 6px; }
+.cmp .ar { font-size: 64px; font-weight: 800; color: var(--gold); }
+.delta { position: absolute; left: 0; right: 0; top: 830px; text-align: center; }
+.delta span { display: inline-block; padding: 12px 36px; border-radius: 40px; background: var(--up); color: #fff; font-size: 52px; font-weight: 800; }
+.delta span.flat { background: var(--line); color: var(--ink); }
+.info { position: absolute; left: 70px; right: 70px; top: 960px; height: 150px; border-radius: 28px; background: var(--hill-soft); border: 2px solid var(--hill); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+.info span { font-size: 38px; font-weight: 800; }
+.info b { font-size: 54px; font-weight: 800; color: var(--hill); }
+.info b small { font-size: 32px; color: var(--muted); margin-left: 10px; }
+
+  </style>
+  <div id="s2" data-composition-id="s2" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s2-k">매매 · 중간값</div>
+    <div class="title" id="s2-t"><span class="badge" style="background:var(--gold);font-size:44px;vertical-align:14px">매매</span> 21건 → 24건</div>
+    <div class="cmp" id="s2-cmp"><div class="bx" id="s2-a"><small>6~8월</small><b>4억 9,900</b><em>21건</em></div><div class="ar">→</div><div class="bx now" id="s2-b"><small>9~11월</small><b>5억 500</b><em>24건</em></div></div>
+    <div class="delta" id="s2-d"><span>▲ 600만 원</span></div>
+    <div class="info" id="s2-i"><span>최고가 · 10월</span><b>5억 4,800<small>23층</small></b></div>
+    <div class="fine">만 원 단위 · 취소 건 제외</div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s2 " + s);
+
+      tl.fromTo(q('#s2-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.0);
+      tl.fromTo(q('#s2-t'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.1);
+      tl.fromTo(q('#s2-a'), { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 0.3);
+      tl.fromTo(q('#s2-b'), { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 1.53);
+      tl.fromTo(q('#s2-d'), { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.8)' }, 3.41);
+      tl.fromTo(q('#s2-i'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 6.02);
+
+      window.__timelines["s2"] = tl;
+    })();
+  </script>
+</template>

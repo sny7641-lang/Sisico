@@ -1,0 +1,72 @@
+<template>
+  <style>
+    
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Regular.woff2') format('woff2'); font-weight: 400; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-SemiBold.woff2') format('woff2'); font-weight: 600; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-Bold.woff2') format('woff2'); font-weight: 700; }
+@font-face { font-family: 'Pretendard'; src: url('assets/fonts/Pretendard-ExtraBold.woff2') format('woff2'); font-weight: 800; }
+
+    #s1 { position: absolute; inset: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); 
+  --bg: #0c1519; --panel: #13232a; --line: #27424c;
+  --ink: #f3f1ea; --muted: #93a7ad; --hill: #3fd0b0; --hill-soft: rgba(63,208,176,.16);
+  --gold: #f2c14e; --pru: #8fa8ff; --up: #ff7a6b;
+ }
+    
+.kicker { position: absolute; left: 90px; right: 280px; top: 230px; font-size: 36px; font-weight: 700; color: var(--hill); }
+.title  { position: absolute; left: 90px; right: 90px; top: 290px; font-size: 90px; font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.badge { display: inline-block; padding: 6px 22px; border-radius: 24px; font-size: 32px; font-weight: 800; color: #0c1519; }
+.fine { position: absolute; left: 90px; right: 90px; top: 1290px; font-size: 26px; color: var(--muted); font-weight: 600; }
+
+#s1 .title { font-size: 96px; }
+#s1 .title b { color: var(--gold); }
+#s1 .chart { position: absolute; left: 90px; right: 90px; top: 560px; height: 590px; display: flex; align-items: flex-end; gap: 22px; }
+#s1 .col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+#s1 .col .n { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+#s1 .col .stk { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 14px; overflow: hidden; transform-origin: bottom center; }
+#s1 .col.a { opacity: .55; }
+#s1 .sg.s { background: var(--gold); } #s1 .sg.j { background: var(--hill); } #s1 .sg.w { background: var(--pru); }
+#s1 .col .m { margin-top: 12px; font-size: 32px; font-weight: 700; color: var(--muted); }
+#s1 .grp { position: absolute; top: 500px; width: 420px; text-align: center; font-size: 34px; font-weight: 800; }
+#s1 .grp.a { left: 90px; color: var(--muted); } #s1 .grp.b { right: 90px; color: var(--gold); }
+#s1 .legend { position: absolute; left: 90px; right: 90px; top: 1210px; display: flex; gap: 30px; font-size: 30px; font-weight: 700; }
+#s1 .legend i { display: inline-block; width: 24px; height: 24px; border-radius: 6px; margin-right: 10px; vertical-align: -3px; }
+
+  </style>
+  <div id="s1" data-composition-id="s1" data-width="1080" data-height="1920">
+
+    <div class="kicker" id="s1-k">힐스테이트운정 25평형 · 실거래</div>
+    <div class="title" id="s1-t">3개월 <b>94건</b></div>
+    <div class="grp a" id="s1-ga">6~8월 86건</div>
+    <div class="grp b" id="s1-gb">9~11월 94건</div>
+    <div class="chart"><div class="col a" id="s1-c0"><div class="n">32</div><div class="stk"><span class="sg w" style="height:77px"></span><span class="sg j" style="height:197px"></span><span class="sg s" style="height:77px"></span></div><div class="m">6월</div></div><div class="col a" id="s1-c1"><div class="n">26</div><div class="stk"><span class="sg w" style="height:33px"></span><span class="sg j" style="height:153px"></span><span class="sg s" style="height:98px"></span></div><div class="m">7월</div></div><div class="col a" id="s1-c2"><div class="n">28</div><div class="stk"><span class="sg w" style="height:87px"></span><span class="sg j" style="height:164px"></span><span class="sg s" style="height:55px"></span></div><div class="m">8월</div></div><div class="col b" id="s1-c3"><div class="n">24</div><div class="stk"><span class="sg w" style="height:66px"></span><span class="sg j" style="height:120px"></span><span class="sg s" style="height:77px"></span></div><div class="m">9월</div></div><div class="col b" id="s1-c4"><div class="n">43</div><div class="stk"><span class="sg w" style="height:142px"></span><span class="sg j" style="height:219px"></span><span class="sg s" style="height:109px"></span></div><div class="m">10월</div></div><div class="col b" id="s1-c5"><div class="n">27</div><div class="stk"><span class="sg w" style="height:44px"></span><span class="sg j" style="height:175px"></span><span class="sg s" style="height:77px"></span></div><div class="m">11월*</div></div></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>매매</span><span><i style="background:var(--hill)"></i>전세</span><span><i style="background:var(--pru)"></i>월세</span></div>
+    <div class="fine" style="top:1270px">* 11월은 24일 신고분까지</div>
+
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector("#s1 " + s);
+
+      tl.fromTo(q('#s1-k'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.05);
+      tl.fromTo(q('#s1-t'), { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.8)' }, 0.15);
+      tl.fromTo(q('#s1-c0 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.50);
+      tl.fromTo(q('#s1-c0 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.80);
+      tl.fromTo(q('#s1-c1 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.62);
+      tl.fromTo(q('#s1-c1 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.92);
+      tl.fromTo(q('#s1-c2 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.74);
+      tl.fromTo(q('#s1-c2 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.04);
+      tl.fromTo(q('#s1-c3 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.86);
+      tl.fromTo(q('#s1-c3 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.16);
+      tl.fromTo(q('#s1-c4 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.98);
+      tl.fromTo(q('#s1-c4 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.28);
+      tl.fromTo(q('#s1-c5 .stk'), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 1.10);
+      tl.fromTo(q('#s1-c5 .n'), { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.40);
+
+      tl.fromTo(q('#s1-ga'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 4.51);
+      tl.fromTo(q('#s1-gb'), { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 4.91);
+
+      window.__timelines["s1"] = tl;
+    })();
+  </script>
+</template>
