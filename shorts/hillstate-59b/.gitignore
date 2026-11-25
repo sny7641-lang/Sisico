@@ -3,3 +3,4 @@ audio/
 build/
 *.mp4
 cover.png
+thumb_*.jpg
