@@ -24,14 +24,14 @@
    "narration": "힐스테이트운정 59B, 25평 구조 한 번에 보여 드릴게요.",
    "zoom": 1.15,
    "fade_in": false,
-   "audio": "audio/s01.wav"
+   "audio": "audio/s01_d.wav"
   },
   {
    "image": "img/p01.jpg",
    "narration": "현관엔 유리 중문, 신발장도 넉넉해요.",
    "caption": "현관엔 [[유리 중문]]\n신발장도 넉넉",
    "move": "up",
-   "audio": "audio/s02.wav"
+   "audio": "audio/s02_d.wav"
   },
   {
    "image": "img/shoe1.jpg",
@@ -52,13 +52,13 @@
    "narration": "복도를 따라 방과 거실이 나뉘는 구조예요.",
    "caption": "방과 거실이\n[[분리된]] 구조",
    "zoom": 1.18,
-   "audio": "audio/s03.wav"
+   "audio": "audio/s03_d.wav"
   },
   {
    "image": "img/p14.jpg",
    "narration": "거실 옆엔 김치냉장고장, 팬트리로도 쓸 수 있어요.",
    "caption": "거실 옆\n[[김치냉장고장]]",
-   "audio": "audio/s04.wav"
+   "audio": "audio/s04_d.wav"
   },
   {
    "image": "img/pantry.jpg",
@@ -71,20 +71,20 @@
    "narration": "주방은 넉넉한 디귿자형이에요.",
    "caption": "주방은 넉넉한\n[[ㄷ자형]]",
    "move": "down",
-   "audio": "audio/s05.wav"
+   "audio": "audio/s05_d.wav"
   },
   {
    "image": "img/p09.jpg",
    "narration": "안방은 발코니로 이어지고,",
    "caption": "안방은\n[[발코니]] 연결",
-   "audio": "audio/s06.wav"
+   "audio": "audio/s06_d.wav"
   },
   {
    "image": "img/p12.jpg",
    "narration": "안쪽엔 넉넉한 붙박이장이 있어요.",
    "caption": "안쪽엔 넉넉한\n[[붙박이장]]",
    "zoom": 1.18,
-   "audio": "audio/s07.wav"
+   "audio": "audio/s07_d.wav"
   },
   {
    "image": "img/dress1.jpg",
@@ -104,32 +104,32 @@
    "narration": "작은방에도 붙박이장이 있고요.",
    "caption": "작은방에도\n[[붙박이장]]",
    "move": "up",
-   "audio": "audio/s08.wav"
+   "audio": "audio/s08_d.wav"
   },
   {
    "image": "img/p06.jpg",
    "narration": "방은 모두 세 개, 창이 커서 채광도 좋아요.",
    "caption": "방 [[3개]]\n큰 창으로 [[채광]]",
-   "audio": "audio/s09.wav"
+   "audio": "audio/s09_d.wav"
   },
   {
    "image": "img/p10.jpg",
    "narration": "욕실은 두 개, 욕조형과",
    "caption": "욕실 [[2개]]\n욕조형",
    "move": "down",
-   "audio": "audio/s10.wav"
+   "audio": "audio/s10_d.wav"
   },
   {
    "image": "img/p11.jpg",
    "narration": "샤워부스형으로 나뉘어요.",
    "caption": "[[샤워부스형]]",
-   "audio": "audio/s11.wav"
+   "audio": "audio/s11_d.wav"
   },
   {
    "image": "img/p15.jpg",
    "narration": "넓은 다용도실까지, 25평이 알차게 나왔습니다.",
    "caption": "넓은 [[다용도실]]까지\n25평 알찬 구성",
-   "audio": "audio/s12.wav"
+   "audio": "audio/s12_d.wav"
   },
   {
    "image": "img/outro.jpg",
@@ -138,7 +138,7 @@
    "zoom": 1.04,
    "no_footer": true,
    "tag": "",
-   "audio": "audio/s13.wav"
+   "audio": "audio/s13_d.wav"
   }
  ]
 }
