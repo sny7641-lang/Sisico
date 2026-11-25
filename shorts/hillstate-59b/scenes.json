@@ -56,14 +56,14 @@
   },
   {
    "image": "img/p14.jpg",
-   "narration": "거실 옆엔 큰 팬트리 수납장까지 있고요.",
-   "caption": "거실 옆\n[[팬트리 수납장]]",
+   "narration": "거실 옆엔 김치냉장고장, 팬트리로도 쓸 수 있어요.",
+   "caption": "거실 옆\n[[김치냉장고장]]",
    "audio": "audio/s04.wav"
   },
   {
    "image": "img/pantry.jpg",
-   "seconds": 1.4,
-   "caption": "문 열면 [[대형 팬트리]]",
+   "seconds": 1.5,
+   "caption": "[[팬트리]]로도 활용",
    "zoom": 1.08
   },
   {
