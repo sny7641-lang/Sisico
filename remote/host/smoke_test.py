@@ -1,22 +1,40 @@
 """호스트가 켜진 상태에서 접속·인증·H.264 수신·입력 처리를 확인합니다.  python smoke_test.py <비밀번호> [주소]"""
 import asyncio
-import hashlib
-import hmac
 import json
 import os
+import ssl
 import sys
 import time
 
 import av
 from websockets.asyncio.client import connect
 
+from remote_proto import derive_key, fingerprint, short_fp
+
+
+def tls():
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE   # 자체 서명 인증서 → 지문으로 확인
+    return ctx
+
+
+async def wrong_password(addr):
+    async with connect(f"wss://{addr}:8765", ssl=tls()) as ws:
+        h = json.loads(await ws.recv())
+        await ws.send(json.dumps({"t": "auth", "k": derive_key("wrong-password", h["salt"], h["iter"]).hex()}))
+        r = json.loads(await ws.recv())
+        assert r["t"] == "err", r
+        print("wrong password rejected")
+
 
 async def main(pw, addr):
-    async with connect(f"ws://{addr}:8765", max_size=2 ** 22) as ws:
+    await wrong_password(addr)
+    async with connect(f"wss://{addr}:8765", max_size=2 ** 22, ssl=tls()) as ws:
+        der = ws.transport.get_extra_info("ssl_object").getpeercert(binary_form=True)
+        print("TLS", ws.transport.get_extra_info("ssl_object").version(), "fingerprint", short_fp(fingerprint(der)))
         hello = json.loads(await ws.recv())
-        key = hashlib.sha256(pw.encode()).digest()
-        mac = hmac.new(key, bytes.fromhex(hello["nonce"]), hashlib.sha256).hexdigest()
-        await ws.send(json.dumps({"t": "auth", "mac": mac}))
+        await ws.send(json.dumps({"t": "auth", "k": derive_key(pw, hello["salt"], hello["iter"]).hex()}))
         ok = json.loads(await ws.recv())
         assert ok["t"] == "ok", ok
         print("monitors:", ok["monitors"])

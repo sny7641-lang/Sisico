@@ -7,8 +7,9 @@
   sisico_remote_host.exe --set-password  # 비밀번호 바꾸기
   sisico_remote_host.exe --port 9000     # 포트 바꾸기
 
-프로토콜 요약 (protocol.md 에 자세히):
-  서버 → {"t":"hello","nonce":..}  클라 → {"t":"auth","mac":HMAC(sha256(pw), nonce)}
+연결은 TLS(wss://)로 암호화됩니다. 처음 실행할 때 이 PC만의 인증서를 만들고, 창에 나오는
+'지문'을 앱에서 PC를 등록할 때 비교합니다. 프로토콜은 README.md 참고.
+  서버 → {"t":"hello","salt":..,"iter":..}  클라 → {"t":"auth","k":PBKDF2(비밀번호, salt)}
   서버 → {"t":"ok","monitors":[..]} 클라 → {"t":"start", codec/mon/fps/maxw/kbps/q}
   서버 → {"t":"stream",codec,w,h} 다음 바이너리 프레임 [종류 1바이트][플래그 1바이트][데이터]
 """
@@ -16,8 +17,8 @@ import argparse
 import asyncio
 import concurrent.futures
 import getpass
-import hashlib
 import hmac
+import ssl
 import json
 import os
 import secrets
@@ -30,23 +31,21 @@ import numpy as np
 
 import win_input as wi
 
-VERSION = 1
-DEFAULT_PORT = 8765
-DISCOVERY_PORT = 8766
-DISCOVER_MAGIC = b"SISICO_REMOTE_DISCOVER"
-
-PKT_H264, PKT_JPEG, PKT_FILE = 1, 2, 3
-PKT_UPLOAD = 0x10  # 휴대폰 → PC 파일 조각
-FILE_CHUNK = 256 * 1024
-FLAG_KEY = 1
+from remote_proto import (DEFAULT_PORT, DISCOVER_MAGIC, DISCOVERY_PORT, FILE_CHUNK, FLAG_KEY, PBKDF2_ITER,
+                          PKT_FILE, PKT_H264, PKT_JPEG, PKT_UPLOAD, VERSION, derive_key, fingerprint, short_fp,
+                          verifier)
 
 
 # ---------------------------------------------------------------- 설정 파일
-def config_path():
+def config_dir():
     base = os.environ.get("APPDATA") or os.path.expanduser("~")
     d = os.path.join(base, "SisicoRemote")
     os.makedirs(d, exist_ok=True)
-    return os.path.join(d, "config.json")
+    return d
+
+
+def config_path():
+    return os.path.join(config_dir(), "config.json")
 
 
 def load_config():
@@ -62,23 +61,54 @@ def save_config(cfg):
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
 
-def password_key(pw: str) -> str:
-    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+def set_password(cfg, pw):
+    salt = secrets.token_hex(16)
+    cfg.pop("key", None)  # 예전 방식(sha256) 저장값 제거
+    cfg.update(salt=salt, iter=PBKDF2_ITER, verifier=verifier(derive_key(pw, salt, PBKDF2_ITER)))
+    save_config(cfg)
 
 
 def ask_password(cfg):
     while True:
-        a = getpass.getpass("접속 비밀번호를 정하세요 (6자 이상): ")
-        if len(a) < 6:
-            print("  6자 이상이어야 합니다.")
+        a = getpass.getpass("접속 비밀번호를 정하세요 (8자 이상, 길수록 안전): ")
+        if len(a) < 8:
+            print("  8자 이상이어야 합니다.")
             continue
         if getpass.getpass("한 번 더 입력: ") != a:
             print("  두 번 입력한 비밀번호가 다릅니다.")
             continue
-        cfg["key"] = password_key(a)
-        save_config(cfg)
+        set_password(cfg, a)
         print(f"  저장했습니다: {config_path()}")
         return
+
+
+def ensure_certificate():
+    """이 PC만의 TLS 인증서(자체 서명)를 만들거나 불러옵니다. (인증서 경로, 키 경로, 지문) 반환."""
+    cert_path = os.path.join(config_dir(), "cert.pem")
+    key_path = os.path.join(config_dir(), "key.pem")
+    if not (os.path.exists(cert_path) and os.path.exists(key_path)):
+        import datetime
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.x509.oid import NameOID
+        key = ec.generate_private_key(ec.SECP256R1())
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Sisico Remote " + socket.gethostname()[:40])])
+        now = datetime.datetime.now(datetime.timezone.utc)
+        cert = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
+                .serial_number(x509.random_serial_number())
+                .not_valid_before(now - datetime.timedelta(days=1))
+                .not_valid_after(now + datetime.timedelta(days=365 * 30))
+                .sign(key, hashes.SHA256()))
+        with open(key_path, "wb") as f:
+            f.write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                                      serialization.NoEncryption()))
+        with open(cert_path, "wb") as f:
+            f.write(cert.public_bytes(serialization.Encoding.PEM))
+        print("  이 PC의 인증서를 새로 만들었습니다.")
+    with open(cert_path, encoding="ascii") as f:
+        der = ssl.PEM_cert_to_DER_cert(f.read())
+    return cert_path, key_path, fingerprint(der)
 
 
 # ---------------------------------------------------------------- 화면 캡처
@@ -329,8 +359,8 @@ def list_dir(path):
 
 # ---------------------------------------------------------------- 연결 처리
 class Host:
-    def __init__(self, key_hex, test=False):
-        self.key = bytes.fromhex(key_hex)
+    def __init__(self, cfg, test=False):
+        self.salt, self.iter, self.verifier = cfg["salt"], int(cfg["iter"]), cfg["verifier"]
         self.test = test
         self.fails = {}  # ip -> (횟수, 마지막 시각)
         self.active = 0
@@ -347,15 +377,15 @@ class Host:
         if self._blocked(ip):
             await ws.close(4003, "too many attempts")
             return
-        nonce = secrets.token_bytes(16)
-        await ws.send(json.dumps({"t": "hello", "nonce": nonce.hex(), "name": socket.gethostname(), "ver": VERSION}))
+        # 연결은 이미 TLS 로 암호화돼 있고, 앱은 인증서 지문으로 이 PC가 맞는지 확인한 뒤에만 키를 보냅니다.
+        await ws.send(json.dumps({"t": "hello", "salt": self.salt, "iter": self.iter,
+                                  "name": socket.gethostname(), "ver": VERSION}))
         try:
-            msg = json.loads(await asyncio.wait_for(ws.recv(), 15))
-            mac = bytes.fromhex(msg.get("mac", ""))
+            msg = json.loads(await asyncio.wait_for(ws.recv(), 30))
+            key = bytes.fromhex(msg.get("k", ""))
         except Exception:
             return
-        expect = hmac.new(self.key, nonce, hashlib.sha256).digest()
-        if msg.get("t") != "auth" or not hmac.compare_digest(mac, expect):
+        if msg.get("t") != "auth" or not hmac.compare_digest(verifier(key), self.verifier):
             n, _ = self.fails.get(ip, (0, 0))
             self.fails[ip] = (n + 1, time.time())
             await asyncio.sleep(1)
@@ -391,6 +421,8 @@ class Connection:
         self.down_keys = set()
         self.upload = None        # (파일 객체, 경로, 받은 바이트, 전체 크기)
         self.download_task = None
+        self.clip_task = None
+        self.last_clip = None
 
     async def run(self):
         try:
@@ -408,7 +440,7 @@ class Connection:
                 print("연결 오류:", repr(e))
         finally:
             self.abort_upload()
-            for t in (self.stream_task, self.cursor_task, self.download_task):
+            for t in (self.stream_task, self.cursor_task, self.download_task, self.clip_task):
                 if t:
                     t.cancel()
             if self.stream:
@@ -466,7 +498,12 @@ class Connection:
         elif t == "text":
             wi.text(str(m.get("s", "")))
         elif t == "clip_set":
-            wi.clipboard_set(str(m.get("s", "")))
+            self.last_clip = str(m.get("s", ""))
+            wi.clipboard_set(self.last_clip)
+        elif t == "clip_watch":  # PC용 조작 프로그램: 이 PC의 클립보드가 바뀌면 알려 줌
+            if not self.clip_task:
+                self.last_clip = wi.clipboard_get()
+                self.clip_task = asyncio.create_task(self.clip_loop())
         elif t == "clip_get":
             await self.ws.send(json.dumps({"t": "clip", "s": wi.clipboard_get()}))
         # ---- 파일: PC 폴더 보기 / 받기 (PC → 휴대폰)
@@ -500,6 +537,17 @@ class Connection:
                 await self.ws.send(json.dumps({"t": "fput_ok", "path": path, "size": got}, ensure_ascii=False))
         elif t == "fput_cancel":
             self.abort_upload()
+
+    async def clip_loop(self):
+        while True:
+            await asyncio.sleep(0.7)
+            try:
+                cur = wi.clipboard_get()
+            except Exception:
+                continue
+            if cur and cur != self.last_clip:
+                self.last_clip = cur
+                await self.ws.send(json.dumps({"t": "clip", "s": cur}, ensure_ascii=False))
 
     async def on_binary(self, raw):
         if raw[:1] == bytes([PKT_UPLOAD]) and self.upload:
@@ -605,9 +653,13 @@ def local_ips():
     return sorted(ip for ip in ips if not ip.startswith("127."))
 
 
-async def main_async(args, key):
+async def main_async(args, cfg):
     from websockets.asyncio.server import serve
-    host = Host(key, test=args.test)
+    host = Host(cfg, test=args.test)
+    cert, key, fp = ensure_certificate()
+    tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    tls.minimum_version = ssl.TLSVersion.TLSv1_2
+    tls.load_cert_chain(cert, key)
     loop = asyncio.get_running_loop()
     try:
         await loop.create_datagram_endpoint(lambda: Discovery(args.port), local_addr=("0.0.0.0", DISCOVERY_PORT),
@@ -615,10 +667,11 @@ async def main_async(args, key):
     except OSError as e:
         print("LAN 검색 기능을 켜지 못했습니다:", e)
     async with serve(host.handler, args.bind, args.port, max_size=2 ** 20, compression=None,
-                     ping_interval=10, ping_timeout=20) as server:
-        print(f"\nSisico Remote 호스트 실행 중  (포트 {args.port})")
+                     ping_interval=10, ping_timeout=20, ssl=tls) as server:
+        print(f"\nSisico Remote 호스트 실행 중  (포트 {args.port}, 암호화 연결)")
         for ip in local_ips():
-            print(f"  휴대폰 앱에 입력할 주소: {ip}")
+            print(f"  앱에 입력할 주소: {ip}")
+        print(f"  이 PC의 지문: {short_fp(fp)}   ← 앱에서 PC를 등록할 때 같은지 확인하세요")
         print("  끝내려면 이 창을 닫거나 Ctrl+C\n")
         await server.serve_forever()
 
@@ -635,16 +688,17 @@ def main():
     wi.set_dpi_aware()
     cfg = load_config()
     if args.password:
-        cfg["key"] = password_key(args.password)
-        save_config(cfg)
-    elif args.set_password or "key" not in cfg:
+        set_password(cfg, args.password)
+    elif args.set_password or "verifier" not in cfg:
+        if "key" in cfg:
+            print("보안이 강화되어 비밀번호를 다시 정해야 합니다. 앱에서도 PC를 다시 등록해 주세요.")
         ask_password(cfg)
     if args.port:
         cfg["port"] = args.port
         save_config(cfg)
     args.port = int(cfg.get("port", DEFAULT_PORT))
     try:
-        asyncio.run(main_async(args, cfg["key"]))
+        asyncio.run(main_async(args, cfg))
     except KeyboardInterrupt:
         pass
 

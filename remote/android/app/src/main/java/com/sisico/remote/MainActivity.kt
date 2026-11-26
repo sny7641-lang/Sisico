@@ -81,7 +81,13 @@ class MainActivity : Activity() {
                 setPadding(dp(16), dp(14), dp(16), dp(14))
                 elevation = dp(2).toFloat()
                 isClickable = true
-                setOnClickListener { startActivity(Intent(this@MainActivity, RemoteActivity::class.java).putExtra("id", h.id)) }
+                setOnClickListener {
+                    if (h.needsPairing) {
+                        AlertDialog.Builder(this@MainActivity).setTitle("다시 등록이 필요합니다")
+                            .setMessage("보안이 강화되어(암호화 연결) 이 PC를 한 번 다시 등록해야 합니다.\nPC 프로그램도 최신 버전으로 바꿔 주세요.")
+                            .setPositiveButton("다시 등록") { _, _ -> editHost(h) }.setNegativeButton("취소", null).show()
+                    } else startActivity(Intent(this@MainActivity, RemoteActivity::class.java).putExtra("id", h.id))
+                }
                 setOnLongClickListener { hostMenu(h); true }
             }
             card.addView(TextView(this).apply {
@@ -116,7 +122,7 @@ class MainActivity : Activity() {
         val name = field("이름 (예: 집 PC)", old?.name ?: preset?.first ?: "", InputType.TYPE_CLASS_TEXT)
         val addr = field("주소 (예: 192.168.0.10)", old?.address ?: preset?.second ?: "", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
         val port = field("포트", (old?.port ?: preset?.third ?: 8765).toString(), InputType.TYPE_CLASS_NUMBER)
-        val pw = field(if (old != null) "비밀번호 (바꿀 때만 입력)" else "PC에서 정한 비밀번호",
+        val pw = field(if (old != null && !old.needsPairing) "비밀번호 (바꿀 때만 입력)" else "PC에서 정한 비밀번호",
             "", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)
 
         val dlg = AlertDialog.Builder(this).setTitle(if (old == null) "PC 추가" else "PC 수정")
@@ -127,17 +133,75 @@ class MainActivity : Activity() {
                 val p = port.text.toString().toIntOrNull() ?: 8765
                 val password = pw.text.toString()
                 if (a.isEmpty()) { addr.error = "주소를 입력하세요"; return@setOnClickListener }
-                if (old == null && password.isEmpty()) { pw.error = "비밀번호를 입력하세요"; return@setOnClickListener }
-                val key = if (password.isEmpty()) old!!.keyHex else HostStore.passwordKey(password)
-                val entry = HostEntry(old?.id ?: UUID.randomUUID().toString(), name.text.toString().trim(), a, p, key)
-                val all = HostStore.load(this)
-                val idx = all.indexOfFirst { it.id == entry.id }
-                if (idx >= 0) all[idx] = entry else all.add(entry)
-                HostStore.save(this, all)
-                dlg.dismiss(); refresh()
+                val base = HostEntry(old?.id ?: UUID.randomUUID().toString(), name.text.toString().trim(), a, p,
+                    old?.keyHex ?: "", old?.pin ?: "")
+                if (password.isEmpty()) {
+                    if (old == null || old.needsPairing) { pw.error = "비밀번호를 입력하세요"; return@setOnClickListener }
+                    saveHost(base); dlg.dismiss()   // 이름·주소만 바꿈 (지문은 접속할 때마다 확인)
+                } else {
+                    dlg.dismiss()
+                    pair(base, password)
+                }
             }
         }
         dlg.show()
+    }
+
+    private fun saveHost(entry: HostEntry) {
+        val all = HostStore.load(this)
+        val idx = all.indexOfFirst { it.id == entry.id }
+        if (idx >= 0) all[idx] = entry else all.add(entry)
+        HostStore.save(this, all)
+        refresh()
+    }
+
+    /**
+     * PC 등록: 암호화 연결 → PC 인증서 지문을 사용자에게 확인 → 비밀번호로 만든 키로 로그인 시험 → 저장.
+     * 지문을 확인하기 전에는 비밀번호에서 나온 키를 보내지 않습니다.
+     */
+    private fun pair(base: HostEntry, password: String) {
+        val wait = AlertDialog.Builder(this).setMessage("${base.address} 에 연결 중…").setCancelable(false).show()
+        var client: RemoteClient? = null
+        var pin = ""
+        var key = ""
+        client = RemoteClient(base, object : RemoteClient.Callback {
+            override fun onPairHello(fingerprint: String, salt: String, iterations: Int, pcName: String) = runOnUiThread {
+                pin = fingerprint
+                val proceed = {
+                    wait.setMessage("비밀번호 확인 중…")
+                    Thread {
+                        key = HostStore.deriveKey(password, salt, iterations)
+                        client?.sendAuth(key)
+                    }.start()
+                }
+                if (base.pin == fingerprint) { proceed(); return@runOnUiThread }   // 이미 확인한 PC
+                wait.hide()
+                AlertDialog.Builder(this@MainActivity).setTitle("이 PC가 맞나요?")
+                    .setMessage("PC 이름: $pcName\n\nPC의 Sisico 원격 창에 나온 지문과 같은지 확인하세요.\n\n" +
+                        "      ${HostStore.shortFp(fingerprint)}\n\n" +
+                        (if (base.pin.isNotEmpty()) "⚠ 전에 등록한 지문과 다릅니다. PC 프로그램을 새로 설치한 게 아니라면 '아니요'를 누르세요.\n\n" else "") +
+                        "다르면 다른 기기가 PC인 척하는 것일 수 있습니다.")
+                    .setCancelable(false)
+                    .setPositiveButton("같아요") { _, _ -> wait.show(); proceed() }
+                    .setNegativeButton("아니요") { _, _ -> client?.close(); wait.dismiss() }
+                    .show()
+            }.let {}
+
+            override fun onAuthed(pcName: String, monitors: List<Monitor>) = runOnUiThread {
+                client?.close()
+                wait.dismiss()
+                saveHost(base.copy(name = base.name.ifEmpty { pcName }, keyHex = key, pin = pin))
+                Toast.makeText(this@MainActivity, "등록했습니다", Toast.LENGTH_SHORT).show()
+            }.let {}
+
+            override fun onClosed(reason: String, authFailed: Boolean) = runOnUiThread {
+                wait.dismiss()
+                AlertDialog.Builder(this@MainActivity).setTitle("등록하지 못했습니다").setMessage(reason)
+                    .setPositiveButton("다시 입력") { _, _ -> editHost(base) }
+                    .setNegativeButton("닫기", null).show()
+            }.let {}
+        }, pairing = true)
+        client!!.connect()
     }
 
     /** 같은 네트워크에 브로드캐스트를 보내 실행 중인 호스트를 찾습니다. */
