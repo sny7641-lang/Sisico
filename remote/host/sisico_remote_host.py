@@ -35,7 +35,9 @@ DEFAULT_PORT = 8765
 DISCOVERY_PORT = 8766
 DISCOVER_MAGIC = b"SISICO_REMOTE_DISCOVER"
 
-PKT_H264, PKT_JPEG = 1, 2
+PKT_H264, PKT_JPEG, PKT_FILE = 1, 2, 3
+PKT_UPLOAD = 0x10  # 휴대폰 → PC 파일 조각
+FILE_CHUNK = 256 * 1024
 FLAG_KEY = 1
 
 
@@ -266,6 +268,65 @@ class Stream:
         self.pool.shutdown(wait=False)
 
 
+# ---------------------------------------------------------------- 파일 전송
+def receive_dir():
+    d = os.path.join(os.path.expanduser("~"), "Downloads", "Sisico 원격")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def safe_name(name):
+    name = os.path.basename(str(name).replace("\\", "/")) or "file"
+    name = "".join("_" if c in '<>:"/\\|?*' or ord(c) < 32 else c for c in name).strip(" .") or "file"
+    return name[:200]
+
+
+def unique_path(folder, name):
+    base, ext = os.path.splitext(name)
+    path, n = os.path.join(folder, name), 1
+    while os.path.exists(path):
+        path = os.path.join(folder, f"{base} ({n}){ext}")
+        n += 1
+    return path
+
+
+def list_dir(path):
+    """폴더 내용. path 가 비어 있으면 자주 쓰는 폴더와 드라이브 목록."""
+    if not path:
+        home = os.path.expanduser("~")
+        items = []
+        for label, sub in (("바탕 화면", "Desktop"), ("다운로드", "Downloads"), ("문서", "Documents"), ("사진", "Pictures")):
+            p = os.path.join(home, sub)
+            if os.path.isdir(p):
+                items.append({"name": label, "path": p, "dir": True})
+        if sys.platform == "win32":
+            import string
+            for letter in string.ascii_uppercase:
+                p = f"{letter}:\\"
+                if os.path.exists(p):
+                    items.append({"name": f"{letter}: 드라이브", "path": p, "dir": True})
+        else:
+            items.append({"name": "/", "path": "/", "dir": True})
+        return {"t": "ls", "path": "", "parent": None, "items": items}
+    path = os.path.abspath(path)
+    items = []
+    with os.scandir(path) as it:
+        for e in it:
+            try:
+                is_dir = e.is_dir()
+                items.append({"name": e.name, "path": e.path, "dir": is_dir,
+                              "size": 0 if is_dir else e.stat().st_size})
+            except OSError:
+                continue
+            if len(items) >= 3000:
+                break
+    items.sort(key=lambda i: (not i["dir"], i["name"].lower()))
+    parent = os.path.dirname(path.rstrip("\\/")) or None
+    if parent == path or (sys.platform == "win32" and len(path) <= 3):
+        parent = ""  # 드라이브 맨 위 → 처음 목록으로
+    return {"t": "ls", "path": path, "parent": parent, "items": items}
+
+
 # ---------------------------------------------------------------- 연결 처리
 class Host:
     def __init__(self, key_hex, test=False):
@@ -328,11 +389,14 @@ class Connection:
         self.fps = 30
         self.down_buttons = set()
         self.down_keys = set()
+        self.upload = None        # (파일 객체, 경로, 받은 바이트, 전체 크기)
+        self.download_task = None
 
     async def run(self):
         try:
             async for raw in self.ws:
                 if isinstance(raw, bytes):
+                    await self.on_binary(raw)
                     continue
                 try:
                     msg = json.loads(raw)
@@ -343,7 +407,8 @@ class Connection:
             if not type(e).__name__.startswith("ConnectionClosed"):
                 print("연결 오류:", repr(e))
         finally:
-            for t in (self.stream_task, self.cursor_task):
+            self.abort_upload()
+            for t in (self.stream_task, self.cursor_task, self.download_task):
                 if t:
                     t.cancel()
             if self.stream:
@@ -404,6 +469,79 @@ class Connection:
             wi.clipboard_set(str(m.get("s", "")))
         elif t == "clip_get":
             await self.ws.send(json.dumps({"t": "clip", "s": wi.clipboard_get()}))
+        # ---- 파일: PC 폴더 보기 / 받기 (PC → 휴대폰)
+        elif t == "ls":
+            try:
+                res = await asyncio.get_running_loop().run_in_executor(None, list_dir, m.get("path") or "")
+            except OSError as e:
+                res = {"t": "ls", "path": m.get("path"), "error": f"열 수 없습니다: {e.strerror or e}"}
+            await self.ws.send(json.dumps(res, ensure_ascii=False))
+        elif t == "fget":
+            if self.download_task and not self.download_task.done():
+                self.download_task.cancel()
+            self.download_task = asyncio.create_task(self.send_file(str(m.get("path", ""))))
+        elif t == "fget_cancel":
+            if self.download_task:
+                self.download_task.cancel()
+        # ---- 파일: 휴대폰 → PC
+        elif t == "fput":
+            self.abort_upload()
+            path = unique_path(receive_dir(), safe_name(m.get("name", "file")))
+            try:
+                self.upload = [open(path, "wb"), path, 0, int(m.get("size", 0))]
+            except OSError as e:
+                await self.ws.send(json.dumps({"t": "fput_err", "msg": str(e)}))
+        elif t == "fput_end":
+            if self.upload:
+                f, path, got, _ = self.upload
+                f.close()
+                self.upload = None
+                print(f"파일 받음: {path} ({got:,} 바이트)")
+                await self.ws.send(json.dumps({"t": "fput_ok", "path": path, "size": got}, ensure_ascii=False))
+        elif t == "fput_cancel":
+            self.abort_upload()
+
+    async def on_binary(self, raw):
+        if raw[:1] == bytes([PKT_UPLOAD]) and self.upload:
+            f = self.upload[0]
+            await asyncio.get_running_loop().run_in_executor(None, f.write, raw[1:])
+            self.upload[2] += len(raw) - 1
+
+    def abort_upload(self):
+        if self.upload:
+            f, path, _, _ = self.upload
+            self.upload = None
+            try:
+                f.close()
+                os.remove(path)
+            except OSError:
+                pass
+
+    async def send_file(self, path):
+        loop = asyncio.get_running_loop()
+        try:
+            f = open(path, "rb")
+        except OSError as e:
+            await self.ws.send(json.dumps({"t": "fget_err", "msg": f"열 수 없습니다: {e.strerror or e}"}, ensure_ascii=False))
+            return
+        try:
+            size = os.fstat(f.fileno()).st_size
+            await self.ws.send(json.dumps({"t": "fget_start", "name": os.path.basename(path), "size": size},
+                                          ensure_ascii=False))
+            while True:
+                chunk = await loop.run_in_executor(None, f.read, FILE_CHUNK)
+                if not chunk:
+                    break
+                await self.ws.send(bytes([PKT_FILE, 0]) + chunk)
+            await self.ws.send(json.dumps({"t": "fget_end"}))
+        except asyncio.CancelledError:
+            try:
+                await self.ws.send(json.dumps({"t": "fget_err", "msg": "취소했습니다"}, ensure_ascii=False))
+            except Exception:
+                pass
+            raise
+        finally:
+            f.close()
 
     async def stream_loop(self):
         loop = asyncio.get_running_loop()

@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Paint
@@ -40,6 +41,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONArray
+import org.json.JSONObject
 
 class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
 
@@ -72,6 +74,8 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
     private var lastFrames = 0L
     private var rtt = -1L
     private var closedByUser = false
+
+    private val files = FileTransfer(this) { client }
 
     private val mods = linkedSetOf<Int>()
     private val modButtons = HashMap<Int, Button>()
@@ -164,6 +168,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
             barButton("⌘ 단축키") { showShortcuts() },
             barButton("🖥 모니터") { showMonitors() },
             barButton("⚙ 화질") { showSettings() },
+            barButton("📁 파일") { files.showMenu() },
             barButton("📋 클립보드") { showClipboard() },
             barButton("⤢ 원래 크기") { screen.resetZoom() },
             barButton("✕ 끊기") { confirmExit() },
@@ -301,6 +306,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         bytesIn += data.size
         when (kind) {
             1 -> decoder?.offer(data, offset, key)
+            3 -> files.onChunk(data, offset)
             2 -> {
                 val s = surface ?: return
                 val bmp = BitmapFactory.decodeByteArray(data, offset, data.size - offset) ?: return
@@ -325,7 +331,15 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         toast(if (text.isEmpty()) "PC 클립보드가 비어 있습니다" else "PC 클립보드를 복사했습니다 (${text.length}자)")
     }.let {}
 
+    override fun onOther(m: JSONObject) { files.onMessage(m) }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FileTransfer.PICK_REQUEST && resultCode == RESULT_OK) files.onPicked(data)
+    }
+
     override fun onClosed(reason: String, authFailed: Boolean) = ui.post {
+        files.abort()
         if (closedByUser || isFinishing) return@post
         decoder?.release(); decoder = null
         streamCodec = ""
@@ -544,14 +558,22 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
     private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
 
     // ================================================================ 생명주기
+    /** 파일 선택 화면에 다녀오는 동안에는 연결을 유지 */
+    private var pickingFile = false
+
+    override fun startActivityForResult(intent: Intent?, requestCode: Int, options: Bundle?) {
+        if (requestCode == FileTransfer.PICK_REQUEST) pickingFile = true
+        super.startActivityForResult(intent, requestCode, options)
+    }
+
     override fun onStop() {
         super.onStop()
-        if (!isChangingConfigurations) disconnect()   // 앱을 내리면 연결을 끊음 (배터리·데이터 절약)
+        if (!isChangingConfigurations && !pickingFile) disconnect()   // 앱을 내리면 연결을 끊음 (배터리·데이터 절약)
     }
 
     override fun onRestart() {
         super.onRestart()
-        connect()
+        if (pickingFile) { pickingFile = false; client?.msg("kf") } else connect()
     }
 
     override fun onDestroy() {

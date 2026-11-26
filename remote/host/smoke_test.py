@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import hmac
 import json
+import os
 import sys
 import time
 
@@ -33,6 +34,37 @@ async def main(pw, addr):
         print(f"decoded frames in 4s: {frames}, pong: {pong}")
         assert frames >= 20 and pong
 
+        # 파일 전송: 올리기 → 같은 파일 내려받기
+        async def text_msg(kinds):
+            while True:
+                m = await ws.recv()
+                if isinstance(m, str) and json.loads(m)["t"] in kinds:
+                    return json.loads(m)
+        await ws.send(json.dumps({"t": "ls", "path": ""}))
+        root = await text_msg({"ls"})
+        print("PC folders:", [i["name"] for i in root["items"]])
+        assert root["items"]
+        data = os.urandom(700_000)
+        await ws.send(json.dumps({"t": "fput", "name": "smoke 테스트.bin", "size": len(data)}))
+        for i in range(0, len(data), 256 * 1024):
+            await ws.send(bytes([0x10]) + data[i:i + 256 * 1024])
+        await ws.send(json.dumps({"t": "fput_end"}))
+        ok = await text_msg({"fput_ok", "fput_err"})
+        assert ok["t"] == "fput_ok", ok
+        await ws.send(json.dumps({"t": "fget", "path": ok["path"]}))
+        await text_msg({"fget_start"})
+        got = b""
+        while True:
+            m = await ws.recv()
+            if isinstance(m, bytes) and m[0] == 3:
+                got += m[2:]
+            elif isinstance(m, str) and json.loads(m)["t"] in ("fget_end", "fget_err"):
+                break
+        os.remove(ok["path"])
+        print("file round trip:", got == data)
+        assert got == data
+
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
     asyncio.run(main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "127.0.0.1"))

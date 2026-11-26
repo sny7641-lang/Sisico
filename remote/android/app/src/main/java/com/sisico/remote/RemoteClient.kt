@@ -6,6 +6,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import okio.ByteString.Companion.toByteString
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
@@ -25,6 +26,7 @@ class RemoteClient(private val host: HostEntry, private val cb: Callback) {
         fun onPong(rttMs: Long)
         fun onClipboard(text: String)
         fun onClosed(reason: String, authFailed: Boolean)
+        fun onOther(m: JSONObject)
     }
 
     private val http = OkHttpClient.Builder()
@@ -94,6 +96,7 @@ class RemoteClient(private val host: HostEntry, private val cb: Callback) {
             "cur" -> cb.onCursor(m.getDouble("x").toFloat(), m.getDouble("y").toFloat())
             "pong" -> cb.onPong(System.currentTimeMillis() - m.optLong("ts"))
             "clip" -> cb.onClipboard(m.optString("s"))
+            else -> cb.onOther(m)
         }
     }
 
@@ -106,6 +109,11 @@ class RemoteClient(private val host: HostEntry, private val cb: Callback) {
         for ((k, v) in kv) o.put(k, v)
         send(o)
     }
+
+    fun sendBinary(b: ByteArray): Boolean = ws?.send(b.toByteString()) ?: false
+
+    /** 아직 보내지 못하고 쌓여 있는 바이트 (파일 보낼 때 속도 조절용) */
+    fun queued(): Long = ws?.queueSize() ?: 0L
 
     fun close() {
         closedReported = true

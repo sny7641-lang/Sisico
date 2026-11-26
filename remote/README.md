@@ -40,8 +40,11 @@ PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로
 
 **터치 모드**: 누른 곳 클릭, 길게 누르면 오른쪽 클릭, 끌면 드래그. 두 손가락 동작은 같음.
 
-**☰ 메뉴**: 키보드 · 모드 전환 · 단축키(Alt+Tab, Win+D, 작업 관리자, 복사/붙여넣기, 볼륨 등) · 모니터 선택 · 화질 · 클립보드 주고받기 · 원래 크기 · 끊기
+**☰ 메뉴**: 키보드 · 모드 전환 · 단축키(Alt+Tab, Win+D, 작업 관리자, 복사/붙여넣기, 볼륨 등) · 모니터 선택 · 화질 · 파일 · 클립보드 주고받기 · 원래 크기 · 끊기
 - 키보드: 입력란에 친 글자가 PC로 바로 들어갑니다 (한글은 글자가 완성되면 전송). Ctrl/Alt/Shift/Win 을 켠 뒤 다른 키를 누르면 조합키가 됩니다. 방향키, F1~F12, 한/영 키 포함.
+- 파일:
+  - **휴대폰 → PC**: 파일을 여러 개 골라 보내면 PC의 `다운로드\Sisico 원격` 폴더에 저장됩니다.
+  - **PC 파일 받기**: 바탕 화면·다운로드·문서·드라이브부터 PC 폴더를 둘러보고, 파일을 누르면 휴대폰 `다운로드/Sisico 원격` 에 저장됩니다 (안드로이드 9 이하는 앱 전용 다운로드 폴더).
 - 블루투스/USB 키보드를 휴대폰에 연결하면 키가 그대로 PC로 갑니다.
 - 화질: H.264(기본, 데이터 적음) / JPEG(호환용), 해상도 720~원본, 15/30/60fps, 비트레이트 2~16Mbps, 트랙패드 속도
 
@@ -60,11 +63,12 @@ PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로
 
 ### 메시지 (앱 → PC, JSON 텍스트)
 `start`/`cfg` {codec, mon, fps, maxw, kbps, q} · `kf`(키프레임 요청) · `ping`{ts} · `mm`{x,y: 0~1 절대 위치} · `mr`{dx,dy: 픽셀 상대 이동} ·
-`mb`{b, d} · `click`{b} · `wh`{dy,dx} · `key`{vk, d} · `combo`{vks:[..]} · `text`{s} · `clip_set`{s} · `clip_get`
+`mb`{b, d} · `click`{b} · `wh`{dy,dx} · `key`{vk, d} · `combo`{vks:[..]} · `text`{s} · `clip_set`{s} · `clip_get` ·
+`ls`{path: 빈 값이면 처음 목록} · `fget`{path} · `fget_cancel` · `fput`{name,size} → 바이너리 `[0x10][조각]` 반복 → `fput_end` · `fput_cancel`
 
 ### 메시지 (PC → 앱)
-텍스트: `hello`{nonce} · `ok`{monitors} · `err` · `stream`{codec,w,h,mw,mh} · `cur`{x,y} · `pong`{ts} · `clip`{s}
-바이너리: `[종류 1=H.264, 2=JPEG][플래그 bit0=키프레임][데이터]`
+텍스트: `hello`{nonce} · `ok`{monitors} · `err` · `stream`{codec,w,h,mw,mh} · `cur`{x,y} · `pong`{ts} · `clip`{s} · `ls`{path,parent,items} · `fget_start`{name,size} · `fget_end` · `fget_err` · `fput_ok`{path} · `fput_err`
+바이너리: `[종류 1=H.264, 2=JPEG, 3=파일 조각][플래그 bit0=키프레임][데이터]`
 
 ## 보안
 
@@ -75,7 +79,7 @@ PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로
 ## 하지 못하는 것
 
 - 윈도우 잠금 화면·UAC 확인 창(보안 데스크톱)은 캡처/조작되지 않습니다 (서비스로 동작하는 상용 앱만 가능). Ctrl+Alt+Del, Win+L 도 보낼 수 없습니다.
-- 소리 전송, 파일 전송은 아직 없습니다.
+- 소리 전송은 아직 없습니다. 파일 전송 중에는 화면이 잠깐 느려질 수 있습니다 (같은 연결을 나눠 씀).
 
 ## 직접 실행 / 빌드
 
@@ -84,7 +88,7 @@ PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로
 cd remote/host
 pip install -r requirements.txt
 python sisico_remote_host.py            # --test 를 붙이면 실제 화면 대신 시험 무늬
-python smoke_test.py <비밀번호>          # 다른 창에서: 접속·H.264 수신 확인
+python smoke_test.py <비밀번호>          # 다른 창에서: 접속·H.264 수신·파일 전송 확인
 
 # 앱 (Android SDK 필요)
 cd remote/android
