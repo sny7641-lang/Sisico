@@ -1,0 +1,91 @@
+name: Build Sisico Remote
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["remote/**", ".github/workflows/remote.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      # ubuntu-latest runners ship with the Android SDK (ANDROID_HOME)
+      - name: Build and test APK
+        working-directory: remote/android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest assembleDebug --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/assets/debug.keystore" \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=androiddebugkey \
+            -Pandroid.injected.signing.key.password=android
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/sisico-remote.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sisico-remote-apk
+          path: sisico-remote.apk
+
+  windows-host:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build sisico_remote_host.exe
+        working-directory: remote/host
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+          pyinstaller --onefile --console --name sisico_remote_host --collect-all av sisico_remote_host.py
+          Copy-Item dist/sisico_remote_host.exe $env:GITHUB_WORKSPACE/sisico_remote_host.exe
+      - name: Smoke test (test pattern, H.264 stream)
+        working-directory: remote/host
+        shell: pwsh
+        run: |
+          pip install websockets av
+          $p = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_host.exe" -ArgumentList "--test","--password","ci-test-pass" -PassThru
+          Start-Sleep -Seconds 8
+          python smoke_test.py ci-test-pass
+          $code = $LASTEXITCODE
+          Stop-Process -Id $p.Id -Force
+          exit $code
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sisico-remote-host
+          path: sisico_remote_host.exe
+
+  publish:
+    needs: [android, windows-host]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Publish to the "remote-latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: remote-latest
+          name: Sisico 원격 (최신 빌드)
+          prerelease: false
+          make_latest: false
+          target_commitish: ${{ github.sha }}
+          body: |
+            안드로이드 휴대폰으로 윈도우 PC를 조작하는 개인용 원격 프로그램.
+            - 휴대폰: **sisico-remote.apk** 설치
+            - PC: **sisico_remote_host.exe** 실행 (처음 실행할 때 접속 비밀번호를 정함)
+            자세한 사용법: remote/README.md
+            빌드 커밋: ${{ github.sha }}
+          files: |
+            sisico-remote.apk
+            sisico_remote_host.exe
