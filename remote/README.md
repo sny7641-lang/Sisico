@@ -1,35 +1,39 @@
-# Sisico 원격 (안드로이드 → 윈도우)
+# Sisico 원격
 
-휴대폰으로 집/회사 윈도우 PC 화면을 보고 마우스·키보드로 조작하는 **개인용** 원격 프로그램입니다.
-회원가입·중계 서버 없이 PC와 휴대폰이 직접 연결됩니다.
+휴대폰이나 다른 PC로 윈도우 PC 화면을 보면서 마우스·키보드로 조작하는 **개인용** 원격 프로그램입니다.
+회원가입이나 중계 서버 없이 기기끼리 직접 연결하고, 연결은 모두 암호화됩니다.
 
-| 위치 | 내용 |
-|---|---|
-| `host/` | 윈도우 PC에서 실행하는 호스트 (Python → `sisico_remote_host.exe`) |
-| `android/` | 휴대폰 앱 (Kotlin, `sisico-remote.apk`) |
+| 프로그램 | 역할 | 위치 |
+|---|---|---|
+| `sisico_remote_host.exe` | **조작당할 PC**에서 실행 (화면 보내기, 입력 받기) | `host/sisico_remote_host.py` |
+| `sisico-remote.apk` | **휴대폰**으로 조작 | `android/` |
+| `sisico_remote_viewer.exe` | **다른 PC**로 조작 | `host/sisico_remote_viewer.py` |
 
-`remote/` 를 고쳐서 푸시하면 GitHub Actions(`.github/workflows/remote.yml`)가 APK와 exe를 빌드해
+`remote/` 를 고쳐서 푸시하면 GitHub Actions(`.github/workflows/remote.yml`)가 세 파일을 빌드하고 자동 시험한 뒤
 **Releases → "Sisico 원격 (최신 빌드)"** (`remote-latest` 태그)에 올립니다.
 
 ## 설치
 
-**PC**
-1. 릴리스에서 `sisico_remote_host.exe` 를 받아 아무 폴더에 둡니다.
-2. 실행하면 접속 비밀번호(6자 이상)를 정하라고 합니다. 설정은 `%APPDATA%\SisicoRemote\config.json` 에 저장됩니다 (비밀번호 자체가 아니라 SHA-256 값).
+**조작당할 PC**
+1. `sisico_remote_host.exe` 를 받아 실행합니다.
+2. 처음 실행할 때 접속 비밀번호(8자 이상, 길수록 안전)를 정합니다.
 3. 윈도우 방화벽 창이 뜨면 **개인 네트워크 허용**을 누릅니다.
-4. 창에 나오는 `휴대폰 앱에 입력할 주소` 를 확인합니다.
+4. 창에 나오는 **주소**와 **지문**(`75AD-E8DB-6101-EB15` 같은 모양)을 확인해 둡니다.
    - 관리자 권한으로 실행해야 관리자 권한 창(작업 관리자 등)도 조작됩니다.
    - 윈도우 시작 시 자동 실행: `Win+R` → `shell:startup` → exe 바로 가기를 넣습니다.
    - 비밀번호 변경 `--set-password`, 포트 변경 `--port 9000`
 
-**휴대폰**
-1. 릴리스에서 `sisico-remote.apk` 를 받아 설치합니다.
-2. 같은 와이파이면 **와이파이에서 찾기**, 아니면 **+ PC 추가**에 주소·비밀번호를 넣습니다.
+**휴대폰**: `sisico-remote.apk` 설치 → **와이파이에서 찾기** 또는 **+ PC 추가**
 
-**밖에서(LTE/다른 와이파이) 접속하려면**: PC와 휴대폰 모두에 [Tailscale](https://tailscale.com)을 설치해 같은 계정으로 로그인하고,
-PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로 8765 포트를 인터넷에 여는 것은 권하지 않습니다 (아래 보안 참고).
+**다른 PC**: `sisico_remote_viewer.exe` 실행 → **와이파이에서 찾기** 또는 **추가**
 
-## 조작법
+PC를 등록하면 앱이 PC에 접속해 **지문**을 보여 줍니다. PC 창에 나온 지문과 같을 때만 **같아요**를 누르세요.
+그다음 비밀번호가 맞는지 확인하고 저장합니다.
+
+**밖(LTE·다른 와이파이)에서 접속하려면**: 양쪽 기기에 [Tailscale](https://tailscale.com)을 설치해 같은 계정으로
+로그인하고, PC의 `100.x.x.x` 주소로 등록하세요. 공유기 포트포워딩은 권하지 않습니다.
+
+## 휴대폰 조작법
 
 **트랙패드 모드** (기본, 노트북 터치패드처럼)
 - 한 손가락 이동: 커서 이동 (빠르게 움직이면 더 멀리)
@@ -40,59 +44,90 @@ PC의 `100.x.x.x` 주소를 앱에 넣으세요. 공유기 포트포워딩으로
 
 **터치 모드**: 누른 곳 클릭, 길게 누르면 오른쪽 클릭, 끌면 드래그. 두 손가락 동작은 같음.
 
-**☰ 메뉴**: 키보드 · 모드 전환 · 단축키(Alt+Tab, Win+D, 작업 관리자, 복사/붙여넣기, 볼륨 등) · 모니터 선택 · 화질 · 파일 · 클립보드 주고받기 · 원래 크기 · 끊기
-- 키보드: 입력란에 친 글자가 PC로 바로 들어갑니다 (한글은 글자가 완성되면 전송). Ctrl/Alt/Shift/Win 을 켠 뒤 다른 키를 누르면 조합키가 됩니다. 방향키, F1~F12, 한/영 키 포함.
-- 파일:
-  - **휴대폰 → PC**: 파일을 여러 개 골라 보내면 PC의 `다운로드\Sisico 원격` 폴더에 저장됩니다.
-  - **PC 파일 받기**: 바탕 화면·다운로드·문서·드라이브부터 PC 폴더를 둘러보고, 파일을 누르면 휴대폰 `다운로드/Sisico 원격` 에 저장됩니다 (안드로이드 9 이하는 앱 전용 다운로드 폴더).
+**☰ 메뉴**: 키보드 · 모드 전환 · 단축키 · 모니터 선택 · 화질 · 파일 · 클립보드 · 원래 크기 · 끊기
+- 키보드: 입력란에 친 글자가 PC로 바로 들어갑니다 (한글은 글자가 완성되면 전송). Ctrl/Alt/Shift/Win 을 켠 뒤 다른 키를 누르면 조합키가 됩니다.
+- 파일: **휴대폰 → PC** (PC의 `다운로드\Sisico 원격`), **PC 파일 받기** (PC 폴더를 둘러보고 휴대폰 `다운로드/Sisico 원격` 에 저장)
 - 블루투스/USB 키보드를 휴대폰에 연결하면 키가 그대로 PC로 갑니다.
-- 화질: H.264(기본, 데이터 적음) / JPEG(호환용), 해상도 720~원본, 15/30/60fps, 비트레이트 2~16Mbps, 트랙패드 속도
+
+## PC에서 조작 (sisico_remote_viewer.exe)
+
+목록에서 PC를 두 번 누르면 원격 화면 창이 열립니다. 여러 PC를 동시에 열 수 있습니다.
+- 마우스·키보드가 그대로 상대 PC로 갑니다. **Alt+Tab, Win 키**도 전달됩니다 (키보드 잡기).
+- 한글: **오른쪽 Alt = 한/영**, **오른쪽 Ctrl = 한자** (상대 PC의 한글 입력기가 처리). 목록 창에서 끌 수 있음.
+- **복사한 글은 양쪽 PC가 자동으로 맞춰집니다.**
+- **파일을 창에 끌어다 놓으면** 상대 PC의 `다운로드\Sisico 원격` 폴더로 보냅니다.
+- 화질: 보통(1080p 30fps) / 좋음(원본 60fps, 기본) / 최고(원본 60fps 고비트레이트)
+
+원격 화면 창 단축키 — **Ctrl + Alt + Shift** 를 누른 채로:
+
+| 키 | 기능 |
+|---|---|
+| H | 도움말 |
+| F | 전체 화면 켜기/끄기 |
+| M | 다음 모니터 |
+| G | 키보드 잡기 켜기/끄기 (끄면 Alt+Tab 이 내 PC에서 동작) |
+| 1 / 2 / 3 | 화질 보통 / 좋음 / 최고 |
+| Q | 연결 끊기 |
+
+## 보안
+
+- **암호화**: 모든 연결은 TLS(`wss://`, TLS 1.2 이상)입니다. 화면·입력·파일·클립보드 모두 암호화됩니다.
+- **가짜 PC 차단**: PC는 처음 실행할 때 자기만의 인증서를 만들어 `%APPDATA%\SisicoRemote\` 에 둡니다.
+  앱은 등록할 때 확인한 인증서 지문을 기억하고, 접속할 때마다 TLS 연결 단계에서 비교합니다. 다르면 비밀번호에서 나온 키를 보내기 전에 끊고 경고합니다.
+- **비밀번호**: PC마다 다른 salt 로 PBKDF2-SHA256(20만 회)를 돌린 키로 로그인합니다. 비밀번호 자체는 어디에도 저장하지 않습니다.
+  PC 설정 파일에는 그 키의 해시만 있어서, 설정 파일을 복사해 가도 접속할 수 없습니다.
+- **틀린 비밀번호**: 5번 틀린 IP는 5분간 막힙니다.
+- **조작 기기에 저장되는 것**: PC 주소, 지문, 접속 키. 휴대폰·조작 PC를 잃어버리면 PC에서 `--set-password` 로 비밀번호를 바꾸세요 (저장된 키가 모두 무효가 됨).
+- PC 프로그램 창을 닫으면 원격 접속이 완전히 꺼집니다.
+- 남은 약점: 앱 서명 키(`assets/debug.keystore`)가 공개 저장소에 있어, 누군가 같은 서명으로 가짜 앱을 만들 수 있습니다. 이 저장소 릴리스 외의 APK는 설치하지 마세요.
+
+이전 버전에서 바꾸는 경우: PC 프로그램이 비밀번호를 다시 정하라고 하고, 앱에서는 PC를 한 번 다시 등록해야 합니다.
+
+## 하지 못하는 것
+
+- 윈도우 잠금 화면·UAC 확인 창(보안 데스크톱)은 캡처/조작되지 않습니다. Ctrl+Alt+Del, Win+L 도 보낼 수 없습니다.
+- 소리 전송은 없습니다. PC에서 조작할 때 PC → 내 PC 방향 파일 받기는 아직 없습니다 (휴대폰 앱에는 있음).
 
 ## 구조
 
 ```
-[휴대폰 앱]  ── WebSocket (ws://PC:8765) ──  [PC 호스트]
- TextureView ← MediaCodec(H.264 하드웨어 디코딩)   ← libx264 (ultrafast, zerolatency) ← mss 화면 캡처
- 터치 → 마우스/키 JSON 메시지                        → SendInput (마우스·키보드·유니코드 입력)
+[휴대폰 앱 / PC 조작 프로그램]  ── wss:// (TLS, 지문 고정) ──  [PC 호스트]
+ MediaCodec / FFmpeg 로 H.264 디코딩      ← libx264 (ultrafast, zerolatency) ← mss 화면 캡처
+ 마우스·키 JSON 메시지                      → SendInput (마우스·키보드·유니코드)
  같은 와이파이 찾기: UDP 8766 브로드캐스트
 ```
 
-- 인증: 접속하면 PC가 무작위 nonce 를 보내고, 앱이 `HMAC-SHA256(sha256(비밀번호), nonce)` 로 답합니다. 비밀번호는 네트워크로 나가지 않습니다. 5번 틀린 IP는 5분간 막힙니다.
 - 화면이 그대로면 프레임을 보내지 않고, 네트워크가 느리면 전송이 끝날 때까지 다음 캡처를 미뤄 지연이 쌓이지 않게 합니다.
-- 마우스 커서는 영상에 그리지 않고 좌표만 따로 60Hz 로 보내 앱에서 그립니다 (영상보다 빠르게 반응).
+- 휴대폰 앱은 커서 위치를 따로 60Hz 로 받아 직접 그립니다 (영상보다 빠르게 반응).
 
-### 메시지 (앱 → PC, JSON 텍스트)
+### 접속 순서
+1. TLS 연결 → 조작 기기가 인증서 지문을 확인 (다르면 끊음)
+2. PC → `{"t":"hello","salt","iter","name","ver":2}`
+3. 조작 기기 → `{"t":"auth","k": PBKDF2-SHA256(비밀번호, salt, iter) hex}` → PC는 `sha256("sisico-remote-verifier" + k)` 와 비교
+4. PC → `{"t":"ok","monitors":[..]}` 또는 `err` 후 종료(4001)
+
+### 메시지 (조작 기기 → PC, JSON 텍스트)
 `start`/`cfg` {codec, mon, fps, maxw, kbps, q} · `kf`(키프레임 요청) · `ping`{ts} · `mm`{x,y: 0~1 절대 위치} · `mr`{dx,dy: 픽셀 상대 이동} ·
-`mb`{b, d} · `click`{b} · `wh`{dy,dx} · `key`{vk, d} · `combo`{vks:[..]} · `text`{s} · `clip_set`{s} · `clip_get` ·
+`mb`{b, d} · `click`{b} · `wh`{dy,dx} · `key`{vk, d} · `combo`{vks:[..]} · `text`{s} · `clip_set`{s} · `clip_get` · `clip_watch` ·
 `ls`{path: 빈 값이면 처음 목록} · `fget`{path} · `fget_cancel` · `fput`{name,size} → 바이너리 `[0x10][조각]` 반복 → `fput_end` · `fput_cancel`
 
-### 메시지 (PC → 앱)
-텍스트: `hello`{nonce} · `ok`{monitors} · `err` · `stream`{codec,w,h,mw,mh} · `cur`{x,y} · `pong`{ts} · `clip`{s} · `ls`{path,parent,items} · `fget_start`{name,size} · `fget_end` · `fget_err` · `fput_ok`{path} · `fput_err`
+### 메시지 (PC → 조작 기기)
+텍스트: `stream`{codec,w,h,mw,mh} · `cur`{x,y} · `pong`{ts} · `clip`{s} · `ls`{path,parent,items} · `fget_start`{name,size} · `fget_end` · `fget_err` · `fput_ok`{path} · `fput_err`
 바이너리: `[종류 1=H.264, 2=JPEG, 3=파일 조각][플래그 bit0=키프레임][데이터]`
-
-## 보안
-
-- 연결 자체는 암호화되지 않습니다 (인증만 안전함). 화면과 입력 내용은 같은 네트워크에 있는 사람이 볼 수 있으므로,
-  공용 와이파이나 인터넷 너머에서는 반드시 **Tailscale**(WireGuard 암호화) 같은 VPN 을 통해 접속하세요.
-- 비밀번호는 길게 정하세요. 호스트 창을 닫으면 원격 접속이 완전히 꺼집니다.
-
-## 하지 못하는 것
-
-- 윈도우 잠금 화면·UAC 확인 창(보안 데스크톱)은 캡처/조작되지 않습니다 (서비스로 동작하는 상용 앱만 가능). Ctrl+Alt+Del, Win+L 도 보낼 수 없습니다.
-- 소리 전송은 아직 없습니다. 파일 전송 중에는 화면이 잠깐 느려질 수 있습니다 (같은 연결을 나눠 씀).
 
 ## 직접 실행 / 빌드
 
 ```bash
-# 호스트 (윈도우, Python 3.10+)
 cd remote/host
 pip install -r requirements.txt
-python sisico_remote_host.py            # --test 를 붙이면 실제 화면 대신 시험 무늬
-python smoke_test.py <비밀번호>          # 다른 창에서: 접속·H.264 수신·파일 전송 확인
+python sisico_remote_host.py                    # --test 를 붙이면 실제 화면 대신 시험 무늬
+python smoke_test.py <비밀번호>                  # 다른 창에서: 암호화 접속·H.264·파일 전송 확인
+python sisico_remote_viewer.py                  # PC용 조작 프로그램
+python sisico_remote_viewer.py --selftest 127.0.0.1 <비밀번호>   # 화면 없이 등록·접속·파일 시험
 
-# 앱 (Android SDK 필요)
-cd remote/android
-./gradlew testDebugUnitTest assembleDebug
+cd ../android
+./gradlew testDebugUnitTest assembleDebug       # Android SDK 필요
+SISICO_TEST_HOST=127.0.0.1 ./gradlew testDebugUnitTest   # 켜 둔 호스트에 앱 연결 코드로 접속 시험
 ```
 
 ## 참고: StarDesk 1.6.1 APK 분석에서 가져온 아이디어
@@ -100,9 +135,8 @@ cd remote/android
 사용 중인 StarDesk 앱을 열어 본 결과(코드 복사 없이 구조만 참고):
 - WebRTC(`org.webrtc`) 피어 연결 + DataChannel 위에 protobuf 메시지(`com.remote.proto.*`: `MultiTouchEvent`, `ClipboardTextChangeReq`, `CaptureSetting`, `FileTransfer*`, `CursorShapeNotify` 등)
 - 영상 H.264/H.265, 안드로이드 `MediaCodec` + `SurfaceView` 하드웨어 디코딩, 기기별 디코더 예외 목록(`streamer-config.json`)
-- 조작: 트랙패드형 제스처(드래그·스크롤·확대 애니메이션), 윈도우/맥 전체 키보드 배열, 가상 게임패드, 단축키, 다중 모니터, 클립보드, 파일 전송, 원격 터미널
+- 조작: 트랙패드형 제스처, 윈도우/맥 전체 키보드 배열, 가상 게임패드, 단축키, 다중 모니터, 클립보드, 파일 전송, 원격 터미널
 - 계정·클라우드 중계 서버·광고/분석 SDK(Firebase, AppsFlyer, Sentry, 결제)
 
-이 프로그램은 개인용이라 계정/중계 서버/광고를 빼고, WebRTC 대신 단순한 WebSocket + H.264 로 같은 핵심 흐름
-(하드웨어 디코딩, 트랙패드 제스처, 커서 따로 전송, 다중 모니터, 클립보드, 조합키)을 구현했습니다.
+이 프로그램은 개인용이라 계정/중계 서버/광고를 빼고, WebRTC 대신 단순한 WebSocket(TLS) + H.264 로 같은 핵심 흐름을 구현했습니다.
 NAT 너머 연결은 직접 중계 서버를 두는 대신 Tailscale 에 맡깁니다.

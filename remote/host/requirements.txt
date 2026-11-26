@@ -4,3 +4,4 @@ numpy>=1.26
 pillow>=10
 websockets>=13
 cryptography>=42
+pygame>=2.5

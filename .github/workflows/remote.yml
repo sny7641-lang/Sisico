@@ -41,29 +41,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build sisico_remote_host.exe
+      - name: Build sisico_remote_host.exe and sisico_remote_viewer.exe
         working-directory: remote/host
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
           pyinstaller --onefile --console --name sisico_remote_host --collect-all av sisico_remote_host.py
+          pyinstaller --onefile --windowed --name sisico_remote_viewer --collect-all av sisico_remote_viewer.py
           Copy-Item dist/sisico_remote_host.exe $env:GITHUB_WORKSPACE/sisico_remote_host.exe
-      - name: Smoke test (test pattern, H.264 stream)
+          Copy-Item dist/sisico_remote_viewer.exe $env:GITHUB_WORKSPACE/sisico_remote_viewer.exe
+      - name: Smoke test (TLS, H.264 stream, files, PC viewer)
         working-directory: remote/host
         shell: pwsh
         run: |
-          pip install websockets av
           $p = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_host.exe" -ArgumentList "--test","--password","ci-test-pass" -PassThru
           Start-Sleep -Seconds 8
           python smoke_test.py ci-test-pass
           $code = $LASTEXITCODE
+          if ($code -eq 0) {
+            $v = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_viewer.exe" -ArgumentList "--selftest","127.0.0.1","ci-test-pass" -Wait -PassThru
+            Write-Host "viewer selftest exit code: $($v.ExitCode)"
+            $code = $v.ExitCode
+          }
           Stop-Process -Id $p.Id -Force
           exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: sisico-remote-host
-          path: sisico_remote_host.exe
+          path: |
+            sisico_remote_host.exe
+            sisico_remote_viewer.exe
 
   publish:
     needs: [android, windows-host]
@@ -81,11 +89,13 @@ jobs:
           make_latest: false
           target_commitish: ${{ github.sha }}
           body: |
-            안드로이드 휴대폰으로 윈도우 PC를 조작하는 개인용 원격 프로그램.
-            - 휴대폰: **sisico-remote.apk** 설치
-            - PC: **sisico_remote_host.exe** 실행 (처음 실행할 때 접속 비밀번호를 정함)
+            휴대폰이나 다른 PC로 윈도우 PC를 조작하는 개인용 원격 프로그램 (암호화 연결).
+            - 조작당할 PC: **sisico_remote_host.exe** 실행 (처음 실행할 때 접속 비밀번호를 정함)
+            - 휴대폰에서 조작: **sisico-remote.apk** 설치
+            - 다른 PC에서 조작: **sisico_remote_viewer.exe** 실행
             자세한 사용법: remote/README.md
             빌드 커밋: ${{ github.sha }}
           files: |
             sisico-remote.apk
             sisico_remote_host.exe
+            sisico_remote_viewer.exe
