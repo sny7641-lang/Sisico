@@ -54,15 +54,24 @@ jobs:
       - name: Smoke test (TLS, H.264 stream, files, PC viewer)
         working-directory: remote/host
         shell: pwsh
+        timeout-minutes: 6
         run: |
           $p = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_host.exe" -ArgumentList "--test","--password","ci-test-pass" -PassThru
           Start-Sleep -Seconds 8
           python smoke_test.py ci-test-pass
           $code = $LASTEXITCODE
           if ($code -eq 0) {
-            $v = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_viewer.exe" -ArgumentList "--selftest","127.0.0.1","ci-test-pass" -Wait -PassThru
-            Write-Host "viewer selftest exit code: $($v.ExitCode)"
-            $code = $v.ExitCode
+            Write-Host "--- viewer selftest (source)"
+            python sisico_remote_viewer.py --selftest 127.0.0.1 ci-test-pass
+            $code = $LASTEXITCODE
+            Get-Content selftest.log
+          }
+          if ($code -eq 0) {
+            Write-Host "--- viewer selftest (exe)"
+            $v = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_viewer.exe" -ArgumentList "--selftest","127.0.0.1","ci-test-pass" -PassThru
+            if (-not $v.WaitForExit(90000)) { Write-Host "viewer exe did not exit"; $v.Kill($true); $code = 1 } else { $code = $v.ExitCode }
+            Get-Content selftest.log
+            Write-Host "viewer exe exit code: $code"
           }
           Stop-Process -Id $p.Id -Force
           exit $code

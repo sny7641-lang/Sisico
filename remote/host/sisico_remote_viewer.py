@@ -640,8 +640,17 @@ def main():
     if sys.platform == "win32":
         wi.set_dpi_aware()
     if args.selftest:
+        # 창 없는 exe 에서도 결과를 볼 수 있게 로그 파일로. 멈추면 60초 뒤 스레드 위치를 남기고 끝냄.
+        import faulthandler
+        log = open("selftest.log", "w", encoding="utf-8", buffering=1)
+        sys.stdout = sys.stderr = log
+        faulthandler.dump_traceback_later(60, exit=True, file=log)
         from viewer_net import selftest
-        sys.exit(selftest(*args.selftest))
+        code = selftest(*args.selftest)
+        print("selftest finished, exit code", code)
+        log.flush()
+        faulthandler.cancel_dump_traceback_later()
+        sys.exit(code)
     if args.connect:
         store = load_store()
         host = next((h for h in store["hosts"] if h["id"] == args.connect), None)
