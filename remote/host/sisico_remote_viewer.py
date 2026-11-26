@@ -650,12 +650,14 @@ def main():
         print("selftest finished, exit code", code)
         log.flush()
         faulthandler.cancel_dump_traceback_later()
-        sys.exit(code)
+        log.close()
+        os._exit(code)   # 남은 네트워크 스레드가 종료를 붙잡지 않게
     if args.connect:
         store = load_store()
         host = next((h for h in store["hosts"] if h["id"] == args.connect), None)
         if host:
             ViewerWindow(host, store).run()
+        os._exit(0)   # 창을 닫으면 남은 네트워크 스레드와 상관없이 바로 끝냄
         return
     Launcher().run()
 
