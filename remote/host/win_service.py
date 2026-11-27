@@ -144,6 +144,7 @@ if IS_WINDOWS:
     _sig(a32.CreateProcessAsUserW, B, H, wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
          B, D, ctypes.c_void_p, wintypes.LPCWSTR, ctypes.c_void_p, ctypes.c_void_p)
     _sig(u32.OpenInputDesktop, H, D, B, D)
+    _sig(u32.OpenDesktopW, H, wintypes.LPCWSTR, D, B, D)
     _sig(u32.SetThreadDesktop, B, H)
     _sig(u32.CloseDesktop, B, H)
     _sig(u32.GetUserObjectInformationW, B, H, ctypes.c_int, ctypes.c_void_p, D, ctypes.POINTER(D))
@@ -230,7 +231,35 @@ if IS_WINDOWS:
             u32.CloseDesktop(old)
         return True
 
+    def self_check():
+        """SYSTEM 호스트 시작 때: 지금 데스크톱과 로그인·잠금 화면(Winlogon) 데스크톱을 실제로 캡처해 보고 기록."""
+        def try_desktop(name):
+            try:
+                h = u32.OpenInputDesktop(0, False, GENERIC_ALL) if name is None else u32.OpenDesktopW(name, 0, False, GENERIC_ALL)
+                if not h:
+                    return f"open failed ({ctypes.get_last_error()})"
+                real = _desk_name(h)
+                if not u32.SetThreadDesktop(h):
+                    return f"{real}: SetThreadDesktop failed ({ctypes.get_last_error()})"
+                import mss
+                with mss.mss() as s:
+                    shot = s.grab(s.monitors[1])
+                    raw = shot.raw
+                    lit = sum(1 for i in range(0, len(raw), 4 * 997) if raw[i] or raw[i + 1] or raw[i + 2])
+                return f"{real}: capture ok {shot.width}x{shot.height}, non-black samples {lit}"
+            except Exception as e:
+                return f"error {e!r}"
+        for name in (None, "Winlogon"):
+            out = {}
+            t = threading.Thread(target=lambda: out.update(r=try_desktop(name)))   # 새 스레드: 창·훅 없음
+            t.start()
+            t.join(20)
+            log(f"self-check {'input desktop' if name is None else name}: {out.get('r', 'timeout')}")
+
 else:
+    def self_check():
+        pass
+
     def active_session():
         return 1
 

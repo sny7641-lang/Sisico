@@ -235,6 +235,9 @@ class ViewerWindow:
                     wi.clipboard_set(val)
                 except Exception:
                     pass
+            elif kind == "notice":
+                if val:
+                    self.notify(val.replace("\n", " "), 8)
             elif kind == "progress":
                 name, sent, size = val
                 pct = f"{sent * 100 // size}%" if size else f"{sent // 1024} KB"

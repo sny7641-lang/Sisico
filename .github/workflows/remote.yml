@@ -89,7 +89,7 @@ jobs:
           if (-not $i.WaitForExit(120000)) { Write-Host "install did not finish"; exit 1 }
           Write-Host "install exit code: $($i.ExitCode)"
           schtasks /Query /TN SisicoRemoteHost /V /FO LIST | Select-String "Status|Run As User|Task To Run"
-          Start-Sleep -Seconds 12
+          Start-Sleep -Seconds 15
           python smoke_test.py ci-test-pass
           $code = $LASTEXITCODE
           Get-Content "$env:ProgramData\SisicoRemote\service.log" -ErrorAction SilentlyContinue
@@ -98,6 +98,9 @@ jobs:
           # SYSTEM 호스트가 세션 0 이 아닌 화면 세션에서 돌고 있어야 함
           $child = $procs | Where-Object { $_.CommandLine -like "*--system-child*" -and $_.SessionId -ne 0 }
           if (-not $child) { Write-Host "no --system-child host running in a desktop session"; $code = 1 }
+          # 로그인·잠금 화면(Winlogon) 데스크톱을 SYSTEM 호스트가 실제로 캡처할 수 있어야 함
+          $slog = Get-Content "$env:ProgramData\SisicoRemote\service.log" -Raw -ErrorAction SilentlyContinue
+          if ($slog -notmatch "self-check Winlogon: Winlogon: capture ok") { Write-Host "Winlogon desktop capture self-check failed"; $code = 1 }
           else { $owner = Invoke-CimMethod -InputObject ($child | Select-Object -First 1) -MethodName GetOwner; Write-Host "system host owner: $($owner.Domain)\$($owner.User)" }
           $u = Start-Process -FilePath $exe -ArgumentList "--uninstall-service" -PassThru
           $u.WaitForExit(60000) | Out-Null

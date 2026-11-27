@@ -191,6 +191,8 @@ class Session:
             self.events.put(("stream", m))
         elif t == "clip":
             self.events.put(("clip", m.get("s", "")))
+        elif t == "notice":
+            self.events.put(("notice", m.get("msg", "")))
         elif t in ("fput_ok", "fput_err"):
             self.events.put((t, m.get("path") or m.get("msg", "")))
 

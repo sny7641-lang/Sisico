@@ -333,7 +333,15 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         toast(if (text.isEmpty()) "PC 클립보드가 비어 있습니다" else "PC 클립보드를 복사했습니다 (${text.length}자)")
     }.let {}
 
-    override fun onOther(m: JSONObject) { files.onMessage(m) }
+    override fun onOther(m: JSONObject) {
+        if (m.optString("t") == "notice") {
+            // PC가 잠겨 있어 화면을 못 가져오는 경우 등: '화면 받는 중'에 멈춰 있지 않고 이유를 보여 줌
+            val msg = m.optString("msg")
+            ui.post { showStatus(msg.ifEmpty { null }) }
+            return
+        }
+        files.onMessage(m)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

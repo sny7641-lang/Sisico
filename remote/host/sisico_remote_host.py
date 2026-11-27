@@ -25,6 +25,7 @@ import os
 import secrets
 import socket
 import sys
+import threading
 import time
 from fractions import Fraction
 
@@ -278,6 +279,8 @@ class Stream:
         self.prev = None
         self.last_sent = 0.0
         self.settle = 0
+        self.fail_count = 0
+        self.notice = None      # 앱에 보여 줄 안내 ("" 이면 안내 지우기)
 
     def configure(self, cfg):
         self.pending = cfg
@@ -321,9 +324,24 @@ class Stream:
             return info, None
         try:
             frame = self.cap.grab(self.monitor())
-        except Exception:
-            self.cap = None        # 데스크톱이 막 바뀌는 중 등: 다음에 새로 만듦
-            raise
+        except Exception as e:
+            # 잠금 화면(보안 데스크톱)이거나 데스크톱이 막 바뀌는 중: 다음에 캡처를 새로 만들어 다시 시도.
+            # 예외를 던지면 위에서 만든 'stream' 안내가 사라져 앱이 '화면 받는 중'에 멈추므로 여기서 처리.
+            self.cap = None
+            self.fail_count += 1
+            if self.fail_count in (1, 10) or self.fail_count % 300 == 0:
+                print(f"화면 캡처 실패 {self.fail_count}회: {e!r}")
+                if MACHINE:
+                    svc.log(f"capture failed x{self.fail_count}: {e!r}")
+            if self.fail_count == 3:   # 한 번만 알림
+                self.notice = ("PC 화면을 가져오지 못하고 있습니다. 다시 시도하는 중입니다." if MACHINE else
+                               "PC가 잠겨 있거나 보안 화면이라 화면을 볼 수 없습니다.\n"
+                               "PC 트레이 아이콘 메뉴에서 '잠금 화면·로그인 전에도 접속'을 켜면 이 화면에서도 접속됩니다.")
+            time.sleep(0.3)
+            return info, None
+        if self.fail_count:
+            self.fail_count = 0
+            self.notice = ""
         now = time.monotonic()
         same = self.prev is not None and self.prev.shape == frame.shape and np.array_equal(self.prev, frame)
         if not same:
@@ -682,6 +700,9 @@ class Connection:
                 continue
             if info:
                 await self.ws.send(json.dumps(info))
+            if self.stream.notice is not None:
+                notice, self.stream.notice = self.stream.notice, None
+                await self.ws.send(json.dumps({"t": "notice", "msg": notice}, ensure_ascii=False))
             if data:
                 await self.ws.send(data)  # 네트워크가 느리면 여기서 기다리므로 자연스럽게 프레임 수가 줄어듦
             delay = 1 / self.fps - (time.monotonic() - t0)
@@ -805,6 +826,7 @@ def main():
             return
         args.port = int(cfg.get("port", DEFAULT_PORT))
         svc.log(f"system host listening on {args.port}")
+        threading.Thread(target=svc.self_check, daemon=True).start()
         asyncio.run(main_async(args, cfg))
         return
     if use_tray and host_tray.already_running():
