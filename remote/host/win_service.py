@@ -350,24 +350,38 @@ def _run(cmd):
     return r.returncode
 
 
+def _stop_installed_processes():
+    """Program Files 의 호스트 exe 로 돌고 있는 프로세스를 모두 끝냄 (업데이트 전에 파일 잠금 해제)."""
+    path = installed_exe().replace("'", "''")
+    _run(["powershell", "-NoProfile", "-Command",
+          f"Get-CimInstance Win32_Process | Where-Object {{ $_.ExecutablePath -eq '{path}' }} | "
+          "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"])
+
+
 def install(user_config_dir, extra_args=()):
-    """관리자 권한으로 실행됨. 성공하면 True."""
+    """관리자 권한으로 실행됨. 성공하면 "", 실패하면 사람이 읽을 이유."""
     if not getattr(sys, "frozen", False):
-        log("install: only the packaged exe can be installed")
-        return False
+        return "설치용 exe 에서만 설치할 수 있습니다."
     _run(["schtasks", "/End", "/TN", TASK_NAME])          # 업데이트: 돌던 것을 먼저 멈춤
+    _stop_installed_processes()
     time.sleep(1.5)
     os.makedirs(install_dir(), exist_ok=True)
     md = machine_dir()
     os.makedirs(md, exist_ok=True)
-    for _ in range(10):                                    # 방금 멈춘 exe 가 아직 잡혀 있을 수 있음
+    last = None
+    for _ in range(40):                                    # 백신 검사 등으로 파일이 잠시 잡혀 있을 수 있음
         try:
-            shutil.copy2(sys.executable, installed_exe())
+            if os.path.abspath(sys.executable).lower() != installed_exe().lower():
+                shutil.copy2(sys.executable, installed_exe())
             break
-        except OSError:
+        except OSError as e:
+            last = e
+            _stop_installed_processes()
             time.sleep(1)
     else:
-        return False
+        log(f"install: copy failed: {last!r}")
+        return (f"프로그램 파일을 바꾸지 못했습니다.\n{installed_exe()}\n{last}\n\n"
+                "백신(알약 등)이 막고 있을 수 있습니다. 알약 '검역소'에 sisico_remote_host 가 있는지 확인하세요.")
     for name in ("config.json", "cert.pem", "key.pem"):    # 비밀번호·지문 그대로 옮김
         src, dst = os.path.join(user_config_dir, name), os.path.join(md, name)
         if not os.path.exists(src) or os.path.abspath(src) == os.path.abspath(dst):
@@ -385,36 +399,47 @@ def install(user_config_dir, extra_args=()):
     with open(xml, "w", encoding="utf-16") as f:
         f.write(TASK_XML.replace("{exe}", installed_exe()).replace("{extra}", extra))
     if _run(["schtasks", "/Create", "/TN", TASK_NAME, "/XML", xml, "/F"]) != 0:
-        return False
+        return "작업 스케줄러에 등록하지 못했습니다. (설정·로그 폴더의 service.log 참고)"
     os.remove(xml)
     with open(marker_path(), "w", encoding="utf-8") as f:
         json.dump({"installed": time.time()}, f)
     _run(["icacls", marker_path(), "/grant", "*S-1-5-32-545:R"])
+    _run(["icacls", os.path.join(md, "service.log"), "/grant", "*S-1-5-32-545:R"])
     _run(["schtasks", "/Run", "/TN", TASK_NAME])
-    return True
+    return ""
 
 
 def uninstall():
     _run(["schtasks", "/End", "/TN", TASK_NAME])
     _run(["schtasks", "/Delete", "/TN", TASK_NAME, "/F"])
+    _stop_installed_processes()
     try:
         os.remove(marker_path())
     except OSError:
         pass
     time.sleep(1)
     shutil.rmtree(install_dir(), ignore_errors=True)
-    return True
+    return ""
 
 
-def run_elevated(args, wait_for, timeout=60):
-    """관리자 확인 창(UAC)을 띄워 이 exe 를 args 로 실행하고, wait_for() 가 True 가 될 때까지 기다림."""
-    params = " ".join(f'"{a}"' for a in args)
+def run_elevated(args, timeout=300):
+    """관리자 확인 창(UAC)을 띄워 이 exe 를 args 로 실행하고 끝날 때까지 기다림. (성공 여부, 이유) 반환."""
+    import tempfile
+    result = os.path.join(tempfile.gettempdir(), f"sisico_remote_result_{os.getpid()}_{int(time.time())}.txt")
+    params = " ".join(f'"{a}"' for a in list(args) + ["--result", result])
     r = ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 0)
     if r <= 32:
-        return False                    # 사용자가 '아니요'를 누름
+        return False, "관리자 확인 창에서 '아니요'를 눌렀거나 창이 뜨지 못했습니다."
     end = time.time() + timeout
     while time.time() < end:
-        if wait_for():
-            return True
+        if os.path.exists(result):
+            time.sleep(0.3)
+            try:
+                with open(result, encoding="utf-8") as f:
+                    text = f.read().strip()
+                os.remove(result)
+            except OSError:
+                continue
+            return text == "ok", ("" if text == "ok" else text)
         time.sleep(0.5)
-    return False
+    return False, f"{timeout // 60}분 넘게 끝나지 않았습니다. 백신(알약 등)이 막고 있을 수 있습니다."

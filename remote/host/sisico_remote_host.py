@@ -823,6 +823,7 @@ def main():
     ap.add_argument("--supervisor", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--install-service", metavar="USER_CONFIG_DIR", help=argparse.SUPPRESS)
     ap.add_argument("--uninstall-service", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--result", help=argparse.SUPPRESS)   # 설치 결과를 적을 파일 (트레이가 읽음)
     ap.add_argument("--diag", metavar="LOG", help=argparse.SUPPRESS)   # 패키지 점검 (자동 시험용)
     args = ap.parse_args()
 
@@ -832,12 +833,21 @@ def main():
     if args.supervisor:
         svc.supervisor(["--test"] if args.test else [])
         return
-    if args.install_service:
-        ok = svc.install(args.install_service, ["--test"] if args.test else [])
-        os._exit(0 if ok else 1)
-    if args.uninstall_service:
-        svc.uninstall()
-        return
+    if args.install_service or args.uninstall_service:
+        import traceback
+        try:
+            err = (svc.install(args.install_service, ["--test"] if args.test else []) if args.install_service
+                   else svc.uninstall())
+        except Exception as e:
+            svc.log(traceback.format_exc())
+            err = f"오류: {e!r}"
+        if args.result:
+            try:
+                with open(args.result, "w", encoding="utf-8") as f:
+                    f.write(err or "ok")
+            except OSError:
+                pass
+        os._exit(0 if not err else 1)
 
     import host_tray
     no_console = sys.stdout is None or not sys.stdout.isatty()

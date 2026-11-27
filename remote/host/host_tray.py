@@ -191,12 +191,11 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
     if service and svc.installed_is_outdated():
         if ask_yes_no("새 버전을 받으셨네요.\n잠금 화면용으로 설치된 프로그램도 새 버전으로 바꿀까요?\n"
                       "(관리자 확인 창이 뜹니다)"):
-            want = svc.file_hash(sys.executable)
-            if svc.run_elevated(["--install-service", config_dir()],
-                                lambda: svc.file_hash(svc.installed_exe()) == want):
+            ok, why = svc.run_elevated(["--install-service", config_dir()])
+            if ok:
                 message_box("업데이트했습니다.")
             else:
-                message_box("업데이트하지 못했습니다. 나중에 다시 실행해 주세요.", error=True)
+                message_box(f"업데이트하지 못했습니다.\n\n{why}", error=True)
 
     # 자동 실행이 꺼져 있으면 한 번 물어봄 (예전 버전에서 비밀번호를 정한 경우 설정 창을 못 봤으므로)
     asked = os.path.join(config_dir(), "autostart_asked")
@@ -286,18 +285,20 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
                               "· 프로그램이 C:\\Program Files\\SisicoRemote 에 설치되고 윈도우와 함께 시작됩니다.\n"
                               "· 비밀번호와 지문은 그대로입니다 (앱에서 다시 등록할 필요 없음)."):
                 return
-            if svc.run_elevated(["--install-service", config_dir()], svc.service_installed):
+            ok, why = svc.run_elevated(["--install-service", config_dir()])
+            if ok:
                 message_box("켜졌습니다. 이제 재부팅 후 로그인 전이나 잠금 화면에서도 접속됩니다.")
                 restart_tray()
             else:
-                message_box("설치하지 못했습니다 (관리자 확인을 취소했거나 오류).", error=True)
+                message_box(f"켜지 못했습니다.\n\n{why}", error=True)
         else:
             if not ask_yes_no("잠금 화면·로그인 전 접속을 끌까요?\n(끈 뒤에는 로그인한 동안만 접속됩니다)"):
                 return
-            if svc.run_elevated(["--uninstall-service"], lambda: not svc.service_installed()):
+            ok, why = svc.run_elevated(["--uninstall-service"])
+            if ok:
                 restart_tray()
             else:
-                message_box("끄지 못했습니다 (관리자 확인을 취소했거나 오류).", error=True)
+                message_box(f"끄지 못했습니다.\n\n{why}", error=True)
 
     def toggle_autostart(_icon, _item):
         try:

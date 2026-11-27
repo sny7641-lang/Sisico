@@ -92,9 +92,15 @@ jobs:
           $exe = "$env:GITHUB_WORKSPACE/sisico_remote_host.exe"
           Stop-Process -Name sisico_remote_host -Force -ErrorAction SilentlyContinue
           Start-Sleep -Seconds 2
-          $i = Start-Process -FilePath $exe -ArgumentList "--install-service","$env:APPDATA\SisicoRemote" -PassThru
+          $i = Start-Process -FilePath $exe -ArgumentList "--install-service","$env:APPDATA\SisicoRemote","--result","$env:RUNNER_TEMP\install.txt" -PassThru
           if (-not $i.WaitForExit(120000)) { Write-Host "install did not finish"; exit 1 }
-          Write-Host "install exit code: $($i.ExitCode)"
+          Write-Host "install exit code: $($i.ExitCode), result: $(Get-Content $env:RUNNER_TEMP\install.txt)"
+          # 업데이트(이미 설치된 상태에서 다시 설치)도 되는지: 실행 중인 SYSTEM 호스트를 끄고 파일을 바꿀 수 있어야 함
+          Start-Sleep -Seconds 6
+          $i2 = Start-Process -FilePath $exe -ArgumentList "--install-service","$env:APPDATA\SisicoRemote","--result","$env:RUNNER_TEMP\update.txt" -PassThru
+          if (-not $i2.WaitForExit(180000)) { Write-Host "update did not finish"; exit 1 }
+          Write-Host "update exit code: $($i2.ExitCode), result: $(Get-Content $env:RUNNER_TEMP\update.txt)"
+          if ($i2.ExitCode -ne 0) { exit 1 }
           schtasks /Query /TN SisicoRemoteHost /V /FO LIST | Select-String "Status|Run As User|Task To Run"
           Start-Sleep -Seconds 10
           Write-Host "--- unlocked desktop"
