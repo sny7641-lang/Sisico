@@ -10,6 +10,7 @@ import android.graphics.Path
 import android.graphics.SurfaceTexture
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.Surface
@@ -96,6 +97,8 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
     }
 
     fun setCursor(x: Float, y: Float) {
+        // 트랙패드로 막 움직이는 중이면 휴대폰이 그린 커서가 기준 (PC 위치는 한 박자 늦게 오므로 무시)
+        if (trackpad && SystemClock.uptimeMillis() - lastLocalMove < 500) return
         cursorX = x; cursorY = y
         if (trackpad && zoom > 1.01f) followCursor()
         invalidate()
@@ -208,7 +211,10 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
     private var span0 = 0f; private var mid0X = 0f; private var mid0Y = 0f
     private var lastSpan = 0f; private var lastMidX = 0f; private var lastMidY = 0f
     private var scrollAccX = 0f; private var scrollAccY = 0f
-    private var relAccX = 0f; private var relAccY = 0f
+    private var lastT = 0L
+    private var vEma = 0f                 // 손가락 속도 (dp/ms, 부드럽게 평균)
+    private var lastLocalMove = 0L
+    private var sendPending = false
 
     private val longPress = Runnable {
         if (moved || maxPointers > 1) return@Runnable
@@ -231,7 +237,7 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
                 downTime = e.eventTime
                 moved = false; dragging = false; longPressFired = false
                 maxPointers = 1; two = Two.NONE
-                relAccX = 0f; relAccY = 0f
+                lastT = e.eventTime; vEma = 0f
                 tapDragCandidate = trackpad && e.eventTime - lastTapUp < 300 &&
                     hypot(e.x - lastTapX, e.y - lastTapY) < 60 * density
                 if (!trackpad) {
@@ -293,6 +299,8 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
     private fun moveOne(e: MotionEvent) {
         if (!moved && hypot(e.x - downX, e.y - downY) > slop) {
             moved = true
+            // 움직임 판정 전까지의 거리만큼 커서가 툭 튀지 않도록 여기서부터 셈
+            lastX = e.x; lastY = e.y; lastT = e.eventTime
             if (!longPressFired) handler.removeCallbacks(longPress)
             if (trackpad && tapDragCandidate && !dragging) {      // 두 번 탭 후 끌기 = 드래그
                 listener.button("left", true); dragging = true
@@ -305,24 +313,50 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
         }
         if (!moved) return
         if (trackpad) {
-            val dx = e.x - lastX
-            val dy = e.y - lastY
-            // 손가락이 영상 폭만큼 움직이면 커서가 모니터 폭만큼 (× 감도). 빠르게 움직일수록 조금 더 멀리.
-            val pxPerScreen = if (dispW() > 0) monW / dispW() else 1f
-            val v = hypot(dx, dy) / density
-            val accel = 1f + min(v / 25f, 1.2f)
-            relAccX += dx * pxPerScreen * speed * accel
-            relAccY += dy * pxPerScreen * speed * accel
-            val sx = relAccX.toInt(); val sy = relAccY.toInt()
-            if (sx != 0 || sy != 0) {
-                listener.moveRel(sx.toFloat(), sy.toFloat())
-                relAccX -= sx; relAccY -= sy
+            // 터치 사이사이의 중간 지점까지 모두 반영해 매끄럽게
+            for (i in 0..e.historySize) {
+                val x = if (i < e.historySize) e.getHistoricalX(i) else e.x
+                val y = if (i < e.historySize) e.getHistoricalY(i) else e.y
+                val t = if (i < e.historySize) e.getHistoricalEventTime(i) else e.eventTime
+                trackpadDelta(x - lastX, y - lastY, t - lastT)
+                lastX = x; lastY = y; lastT = t
             }
+            return
         } else if (dragging) {
             val (nx, ny) = toNorm(e.x, e.y)
-            listener.moveAbs(nx, ny)
+            cursorX = nx; cursorY = ny
+            scheduleSend()
         }
         lastX = e.x; lastY = e.y
+    }
+
+    /**
+     * 트랙패드 이동: 휴대폰이 커서를 먼저 옮겨 그리고(지연 없음), PC에는 그 위치를 화면 갱신 주기마다 보냄.
+     * 가속: 천천히 움직이면 정밀하게(0.5배), 빠르게 밀면 멀리(최대 2.6배) — 속도는 부드럽게 평균 냄.
+     */
+    private fun trackpadDelta(dx: Float, dy: Float, dt: Long) {
+        if (dx == 0f && dy == 0f) return
+        if (dispW() <= 0f) return
+        val v = hypot(dx, dy) / density / max(dt, 1L).toFloat()
+        vEma = vEma * 0.6f + v * 0.4f
+        val gain = speed * (0.5f + 1.0f * vEma).coerceIn(0.5f, 2.6f)
+        if (cursorX !in 0f..1f || cursorY !in 0f..1f) { cursorX = 0.5f; cursorY = 0.5f }
+        cursorX = (cursorX + dx / dispW() * gain).coerceIn(0f, 1f)
+        cursorY = (cursorY + dy / dispH() * gain).coerceIn(0f, 1f)
+        lastLocalMove = SystemClock.uptimeMillis()
+        if (zoom > 1.01f) followCursor()
+        invalidate()
+        scheduleSend()
+    }
+
+    /** 여러 터치 신호를 묶어 화면 한 번 갱신될 때마다 최신 위치만 보냄 */
+    private fun scheduleSend() {
+        if (sendPending) return
+        sendPending = true
+        postOnAnimation {
+            sendPending = false
+            listener.moveAbs(cursorX, cursorY)
+        }
     }
 
     private fun startTwo(e: MotionEvent) {
