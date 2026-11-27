@@ -214,22 +214,25 @@ if IS_WINDOWS:
         return buf.value
 
     def follow_input_desktop():
-        """이 스레드를 지금 입력을 받는 데스크톱(일반/잠금 화면/UAC)으로 옮김. 옮겼으면 True."""
+        """이 스레드를 지금 입력을 받는 데스크톱(일반 Default / 잠금·로그인 Winlogon / UAC)으로 옮김.
+        옮겼으면 새 데스크톱 이름, 아니면 None."""
         h = u32.OpenInputDesktop(0, False, GENERIC_ALL)
         if not h:
-            return False
+            return None
         name = _desk_name(h)
         if getattr(_tls, "name", None) == name:
             u32.CloseDesktop(h)
-            return False
+            return None
         if not u32.SetThreadDesktop(h):
+            err = ctypes.get_last_error()
             u32.CloseDesktop(h)
-            return False
+            log(f"SetThreadDesktop({name}) failed: {err}")
+            return None
         old = getattr(_tls, "handle", None)
         _tls.handle, _tls.name = h, name
         if old:
             u32.CloseDesktop(old)
-        return True
+        return name
 
     def self_check():
         """SYSTEM 호스트 시작 때: 지금 데스크톱과 로그인·잠금 화면(Winlogon) 데스크톱을 실제로 캡처해 보고 기록."""
@@ -249,12 +252,12 @@ if IS_WINDOWS:
                 return f"{real}: capture ok {shot.width}x{shot.height}, non-black samples {lit}"
             except Exception as e:
                 return f"error {e!r}"
-        for name in (None, "Winlogon"):
-            out = {}
-            t = threading.Thread(target=lambda: out.update(r=try_desktop(name)))   # 새 스레드: 창·훅 없음
-            t.start()
-            t.join(20)
-            log(f"self-check {'input desktop' if name is None else name}: {out.get('r', 'timeout')}")
+        # 화면에 보이는 데스크톱만 캡처할 수 있음 (잠겨 있으면 Winlogon, 아니면 Default)
+        out = {}
+        t = threading.Thread(target=lambda: out.update(r=try_desktop(None)))   # 새 스레드: 창·훅 없음
+        t.start()
+        t.join(20)
+        log(f"self-check input desktop: {out.get('r', 'timeout')}")
 
 else:
     def self_check():
@@ -264,7 +267,7 @@ else:
         return 1
 
     def follow_input_desktop():
-        return False
+        return None
 
     def session_user(session):
         return ""

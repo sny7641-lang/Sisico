@@ -41,16 +41,20 @@ async def main(pw, addr):
         await ws.send(json.dumps({"t": "start", "codec": "h264", "mon": 0, "fps": 30, "maxw": 1280, "kbps": 4000}))
         await ws.send(json.dumps({"t": "ping", "ts": 1}))
         dec = av.CodecContext.create("h264", "r")
-        frames, t0, pong = 0, time.time(), False
+        frames, t0, pong, bright = 0, time.time(), False, 0.0
         while time.time() - t0 < 4:
             m = await ws.recv()
             if isinstance(m, bytes):
                 if m[0] == 1:
-                    frames += len(dec.decode(av.Packet(m[2:])))
+                    for f in dec.decode(av.Packet(m[2:])):
+                        frames += 1
+                        bright = float(f.to_ndarray(format="gray").mean())
             elif json.loads(m)["t"] == "pong":
                 pong = True
-        print(f"decoded frames in 4s: {frames}, pong: {pong}")
-        assert frames >= 20 and pong
+        print(f"decoded frames in 4s: {frames}, pong: {pong}, last frame brightness: {bright:.1f}")
+        assert frames >= MIN_FRAMES and pong
+        if REAL:   # 실제 화면(잠금 화면 등)을 캡처했다면 까만 화면이 아니어야 함
+            assert bright > 3, "captured frame is black"
 
         # 파일 전송: 올리기 → 같은 파일 내려받기
         async def text_msg(kinds):
@@ -82,6 +86,10 @@ async def main(pw, addr):
         print("file round trip:", got == data)
         assert got == data
 
+
+REAL = "--real" in sys.argv          # 시험 무늬가 아닌 실제 화면: 화면이 멈춰 있으면 프레임이 적음
+MIN_FRAMES = 3 if REAL else 20
+sys.argv = [a for a in sys.argv if a != "--real"]
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")

@@ -293,8 +293,10 @@ class Stream:
     def produce(self):
         """캡처 + 인코딩 (작업 스레드에서 실행). (안내 메시지 또는 None, 바이너리 또는 None) 반환."""
         info = None
-        if MACHINE and svc.follow_input_desktop():
+        desk = svc.follow_input_desktop() if MACHINE else None
+        if desk:
             # 잠금 화면 ↔ 바탕 화면 ↔ UAC 창: 보이는 데스크톱이 바뀌면 캡처를 새로 만들고 선명한 첫 장부터
+            svc.log(f"capture follows desktop: {desk}")
             if self.cap is not None:
                 try:
                     self.cap.close()
