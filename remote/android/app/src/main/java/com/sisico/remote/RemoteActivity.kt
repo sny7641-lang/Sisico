@@ -102,6 +102,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         screen = ScreenView(this, this).apply {
             trackpad = settings.trackpad
             speed = settings.speed
+            accel = settings.accel
         }
         root.addView(screen, FrameLayout.LayoutParams(-1, -1))
 
@@ -537,6 +538,9 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         group("JPEG 화질", listOf("50" to 50, "70" to 70, "85" to 85), settings.jpegQuality) { settings.jpegQuality = it as Int }
         group("트랙패드 속도", listOf("느림" to 0.8f, "보통" to 1.3f, "빠름" to 2.0f, "아주 빠름" to 3.0f), settings.speed) {
             settings.speed = it as Float; screen.speed = it
+        }
+        group("트랙패드 가속 (천천히=정밀, 빠르게=멀리)", listOf("약" to 0, "보통" to 1, "강" to 2), settings.accel) {
+            settings.accel = it as Int; screen.accel = it
         }
         group("상태 표시", listOf("보이기" to true, "숨기기" to false), settings.showStats) {
             settings.showStats = it as Boolean

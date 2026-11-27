@@ -44,6 +44,7 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
     val texture = TextureView(ctx)
     var trackpad = true
     var speed = 1.3f
+    var accel = 1        // 가속: 0 약, 1 보통, 2 강
 
     // 원격 화면 크기 (영상 픽셀) 와 PC 모니터 실제 크기
     private var frameW = 0
@@ -338,8 +339,8 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
         if (dx == 0f && dy == 0f) return
         if (dispW() <= 0f) return
         val v = hypot(dx, dy) / density / max(dt, 1L).toFloat()
-        vEma = vEma * 0.6f + v * 0.4f
-        val gain = speed * (0.5f + 1.0f * vEma).coerceIn(0.5f, 2.6f)
+        vEma = vEma * 0.5f + v * 0.5f
+        val gain = speed * accelCurve(vEma)
         if (cursorX !in 0f..1f || cursorY !in 0f..1f) { cursorX = 0.5f; cursorY = 0.5f }
         cursorX = (cursorX + dx / dispW() * gain).coerceIn(0f, 1f)
         cursorY = (cursorY + dy / dispH() * gain).coerceIn(0f, 1f)
@@ -347,6 +348,13 @@ class ScreenView(ctx: Context, private val listener: Listener) : FrameLayout(ctx
         if (zoom > 1.01f) followCursor()
         invalidate()
         scheduleSend()
+    }
+
+    /** 손가락 속도(dp/ms) → 배율. 천천히는 작게(정밀), 빠를수록 가파르게 커짐 */
+    private fun accelCurve(v: Float): Float = when (accel) {
+        0 -> (0.5f + 1.0f * v).coerceIn(0.5f, 2.6f)
+        2 -> (0.25f + 0.6f * v + 1.2f * v * v).coerceIn(0.25f, 6.0f)
+        else -> (0.35f + 0.8f * v + 0.6f * v * v).coerceIn(0.35f, 4.0f)
     }
 
     /** 여러 터치 신호를 묶어 화면 한 번 갱신될 때마다 최신 위치만 보냄 */
