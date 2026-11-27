@@ -3,9 +3,10 @@
 휴대폰 앱이 WebSocket(기본 포트 8765)으로 접속하면 화면을 H.264(또는 JPEG)로 보내고,
 앱에서 오는 마우스·키보드 입력을 PC에 그대로 넣습니다.
 
-  sisico_remote_host.exe                 # 실행 (처음이면 비밀번호를 정합니다)
-  sisico_remote_host.exe --set-password  # 비밀번호 바꾸기
+  sisico_remote_host.exe                 # 작업 표시줄 아이콘으로 실행 (처음이면 비밀번호 설정 창)
+  sisico_remote_host.exe --setup         # 비밀번호 바꾸기 창
   sisico_remote_host.exe --port 9000     # 포트 바꾸기
+  sisico_remote_host.exe --no-tray       # 아이콘 없이 (콘솔/자동 시험용)
 
 연결은 TLS(wss://)로 암호화됩니다. 처음 실행할 때 이 PC만의 인증서를 만들고, 창에 나오는
 '지문'을 앱에서 PC를 등록할 때 비교합니다. 프로토콜은 README.md 참고.
@@ -385,11 +386,29 @@ def list_dir(path):
 
 # ---------------------------------------------------------------- 연결 처리
 class Host:
-    def __init__(self, cfg, test=False):
+    def __init__(self, cfg, test=False, on_event=None):
         self.salt, self.iter, self.verifier = cfg["salt"], int(cfg["iter"]), cfg["verifier"]
         self.test = test
         self.fails = {}  # ip -> (횟수, 마지막 시각)
         self.active = 0
+        self.on_event = on_event or (lambda kind, ip, active: None)
+        self.cfg_mtime = self._mtime()
+
+    @staticmethod
+    def _mtime():
+        try:
+            return os.path.getmtime(config_path())
+        except OSError:
+            return 0
+
+    def refresh(self):
+        """'비밀번호 바꾸기' 창에서 바꾼 설정을 다시 읽음 (재시작 없이)."""
+        m = self._mtime()
+        if m != self.cfg_mtime:
+            self.cfg_mtime = m
+            cfg = load_config()
+            if "verifier" in cfg:
+                self.salt, self.iter, self.verifier = cfg["salt"], int(cfg["iter"]), cfg["verifier"]
 
     def _blocked(self, ip):
         n, t = self.fails.get(ip, (0, 0))
@@ -403,6 +422,7 @@ class Host:
         if self._blocked(ip):
             await ws.close(4003, "too many attempts")
             return
+        self.refresh()
         # 연결은 이미 TLS 로 암호화돼 있고, 앱은 인증서 지문으로 이 PC가 맞는지 확인한 뒤에만 키를 보냅니다.
         await ws.send(json.dumps({"t": "hello", "salt": self.salt, "iter": self.iter,
                                   "name": socket.gethostname(), "ver": VERSION}))
@@ -418,12 +438,14 @@ class Host:
             await ws.send(json.dumps({"t": "err", "msg": "비밀번호가 틀렸습니다"}))
             await ws.close(4001, "auth failed")
             print(f"[{ip}] 비밀번호 틀림")
+            self.on_event("auth_failed", ip, self.active)
             return
         self.fails.pop(ip, None)
         mons = list_monitors(self.test)
         await ws.send(json.dumps({"t": "ok", "monitors": mons, "name": socket.gethostname()}))
         print(f"[{ip}] 연결됨")
         self.active += 1
+        self.on_event("connected", ip, self.active)
         wi.keep_awake(True)
         conn = Connection(self, ws, mons)
         try:
@@ -433,6 +455,7 @@ class Host:
             if self.active == 0:
                 wi.keep_awake(False)
             print(f"[{ip}] 연결 끊김")
+            self.on_event("disconnected", ip, self.active)
 
 
 class Connection:
@@ -679,9 +702,9 @@ def local_ips():
     return sorted(ip for ip in ips if not ip.startswith("127."))
 
 
-async def main_async(args, cfg):
+async def main_async(args, cfg, on_ready=None, on_event=None):
     from websockets.asyncio.server import serve
-    host = Host(cfg, test=args.test)
+    host = Host(cfg, test=args.test, on_event=on_event)
     cert, key, fp = ensure_certificate()
     tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     tls.minimum_version = ssl.TLSVersion.TLSv1_2
@@ -699,6 +722,8 @@ async def main_async(args, cfg):
             print(f"  앱에 입력할 주소: {ip}")
         print(f"  이 PC의 지문: {short_fp(fp)}   ← 앱에서 PC를 등록할 때 같은지 확인하세요")
         print("  끝내려면 이 창을 닫거나 Ctrl+C\n")
+        if on_ready:
+            on_ready({"port": args.port, "ips": local_ips(), "fp": fp})
         await server.serve_forever()
 
 
@@ -709,20 +734,41 @@ def main():
     ap.add_argument("--set-password", action="store_true")
     ap.add_argument("--password", help="비밀번호를 명령줄로 지정 (자동 실행용)")
     ap.add_argument("--test", action="store_true", help="실제 화면 대신 시험 무늬를 보냄")
+    ap.add_argument("--no-tray", action="store_true", help="작업 표시줄 아이콘 없이 실행 (콘솔·자동 시험용)")
+    ap.add_argument("--setup", action="store_true", help="비밀번호 설정 창만 열기")
     args = ap.parse_args()
+
+    import host_tray
+    no_console = sys.stdout is None or not sys.stdout.isatty()
+    use_tray = sys.platform == "win32" and not args.no_tray
+    if sys.stdout is None:  # 콘솔 없는 exe: 기록은 파일로
+        sys.stdout = sys.stderr = open(os.path.join(config_dir(), "host.log"), "a", encoding="utf-8", buffering=1)
 
     wi.set_dpi_aware()
     cfg = load_config()
+    if args.setup:
+        host_tray.setup_dialog(set_password, cfg, first="verifier" not in cfg)
+        return
+    if use_tray and host_tray.already_running():
+        host_tray.message_box("이미 실행 중입니다.\n작업 표시줄 오른쪽 아래 아이콘(^ 를 누르면 보임)을 확인하세요.")
+        return
     if args.password:
         set_password(cfg, args.password)
     elif args.set_password or "verifier" not in cfg:
-        if "key" in cfg:
-            print("보안이 강화되어 비밀번호를 다시 정해야 합니다. 앱에서도 PC를 다시 등록해 주세요.")
-        ask_password(cfg)
+        if use_tray or no_console:
+            if not host_tray.setup_dialog(set_password, cfg, first=True):
+                return
+        else:
+            if "key" in cfg:
+                print("보안이 강화되어 비밀번호를 다시 정해야 합니다. 앱에서도 PC를 다시 등록해 주세요.")
+            ask_password(cfg)
     if args.port:
         cfg["port"] = args.port
         save_config(cfg)
     args.port = int(cfg.get("port", DEFAULT_PORT))
+    if use_tray:
+        host_tray.run_tray(args, cfg, main_async, config_dir, short_fp)
+        return
     try:
         asyncio.run(main_async(args, cfg))
     except KeyboardInterrupt:
@@ -730,8 +776,7 @@ def main():
 
 
 if __name__ == "__main__":
-    if sys.platform == "win32":
-        os.system("")  # 콘솔 색/유니코드 출력 활성화
+    if sys.platform == "win32" and sys.stdout is not None:
         try:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:

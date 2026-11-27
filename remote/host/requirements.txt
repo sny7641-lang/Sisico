@@ -5,3 +5,4 @@ pillow>=10
 websockets>=13
 cryptography>=42
 pygame>=2.5
+pystray>=0.19

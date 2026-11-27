@@ -47,7 +47,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
-          pyinstaller --onefile --console --name sisico_remote_host --collect-all av sisico_remote_host.py
+          pyinstaller --onefile --windowed --name sisico_remote_host --collect-all av --hidden-import pystray._win32 sisico_remote_host.py
           pyinstaller --onefile --windowed --name sisico_remote_viewer --collect-all av sisico_remote_viewer.py
           Copy-Item dist/sisico_remote_host.exe $env:GITHUB_WORKSPACE/sisico_remote_host.exe
           Copy-Item dist/sisico_remote_viewer.exe $env:GITHUB_WORKSPACE/sisico_remote_viewer.exe
@@ -56,7 +56,7 @@ jobs:
         shell: pwsh
         timeout-minutes: 6
         run: |
-          $p = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_host.exe" -ArgumentList "--test","--password","ci-test-pass" -PassThru
+          $p = Start-Process -FilePath "$env:GITHUB_WORKSPACE/sisico_remote_host.exe" -ArgumentList "--test","--no-tray","--password","ci-test-pass" -PassThru
           Start-Sleep -Seconds 8
           python smoke_test.py ci-test-pass
           $code = $LASTEXITCODE
@@ -99,7 +99,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           body: |
             휴대폰이나 다른 PC로 윈도우 PC를 조작하는 개인용 원격 프로그램 (암호화 연결).
-            - 조작당할 PC: **sisico_remote_host.exe** 실행 (처음 실행할 때 접속 비밀번호를 정함)
+            - 조작당할 PC: **sisico_remote_host.exe** 실행 (처음 실행할 때 접속 비밀번호를 정함, 이후 작업 표시줄 아이콘으로 실행)
             - 휴대폰에서 조작: **sisico-remote.apk** 설치
             - 다른 PC에서 조작: **sisico_remote_viewer.exe** 실행
             자세한 사용법: remote/README.md
