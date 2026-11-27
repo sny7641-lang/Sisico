@@ -68,13 +68,39 @@ def set_password(cfg, pw):
     save_config(cfg)
 
 
-def ask_password(cfg):
+def read_secret(prompt):
+    """윈도우 콘솔에서는 칠 때마다 * 를 보여 줌 (아무것도 안 보이면 입력이 안 되는 줄 알기 쉬움)."""
+    if sys.platform != "win32" or not sys.stdin.isatty():
+        return getpass.getpass(prompt)
+    import msvcrt
+    print(prompt, end="", flush=True)
+    chars = []
     while True:
-        a = getpass.getpass("접속 비밀번호를 정하세요 (8자 이상, 길수록 안전): ")
+        ch = msvcrt.getwch()
+        if ch in ("\r", "\n"):
+            print()
+            return "".join(chars)
+        if ch == "\x03":
+            raise KeyboardInterrupt
+        if ch == "\b":
+            if chars:
+                chars.pop()
+                print("\b \b", end="", flush=True)
+        elif ch in ("\x00", "\xe0"):
+            msvcrt.getwch()          # 방향키 같은 특수 키는 무시
+        elif ch.isprintable():
+            chars.append(ch)
+            print("*", end="", flush=True)
+
+
+def ask_password(cfg):
+    print("(비밀번호를 칠 때 * 로 표시됩니다. 한/영 키는 영문 상태로 두세요.)")
+    while True:
+        a = read_secret("접속 비밀번호를 정하세요 (8자 이상, 길수록 안전): ")
         if len(a) < 8:
             print("  8자 이상이어야 합니다.")
             continue
-        if getpass.getpass("한 번 더 입력: ") != a:
+        if read_secret("한 번 더 입력: ") != a:
             print("  두 번 입력한 비밀번호가 다릅니다.")
             continue
         set_password(cfg, a)
