@@ -166,8 +166,23 @@ def make_icon_image():
 
 
 def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
-    import pystray
     import win_service as svc
+    try:
+        import pystray
+        make_icon_image()
+    except Exception as e:
+        # 아이콘을 못 만들어도 원격 접속은 되게: 아이콘 없이 서버만 실행
+        import traceback
+        traceback.print_exc()
+        if svc.service_installed():
+            message_box(f"작업 표시줄 아이콘을 만들지 못했습니다.\n원격 접속(잠금 화면 모드)은 그대로 켜져 있습니다.\n\n{e!r}",
+                        error=True)
+            return
+        threading.Thread(target=message_box, daemon=True, args=(
+            "작업 표시줄 아이콘을 만들지 못해 아이콘 없이 실행합니다. 원격 접속은 됩니다.\n"
+            f"(끄려면 작업 관리자에서 sisico_remote_host 를 끝내세요)\n\n{e!r}", APP_NAME, True)).start()
+        asyncio.run(main_async(args, cfg))
+        return
 
     service = svc.service_installed()   # 잠금 화면 모드: 원격 접속은 SYSTEM 쪽이 담당, 트레이는 안내만
     state = {"info": None, "active": 0}

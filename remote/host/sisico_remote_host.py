@@ -784,6 +784,30 @@ async def main_async(args, cfg, on_ready=None, on_event=None):
         await server.serve_forever()
 
 
+def run_diag(path):
+    """exe 안에 트레이·창·인코더에 필요한 것이 다 들어 있는지 실제로 불러 봄."""
+    import traceback
+    results, ok = [], True
+    checks = [
+        ("PIL.Image", lambda: __import__("PIL.Image").Image.new("RGB", (4, 4)).tobytes()),
+        ("tray icon image", lambda: __import__("host_tray").make_icon_image().size),
+        ("pystray", lambda: __import__("pystray").Icon),
+        ("tkinter", lambda: __import__("tkinter").TkVersion),
+        ("mss", lambda: __import__("mss").mss),
+        ("libx264", lambda: H264Encoder(64, 64, 30, 1000).encode(np.zeros((64, 64, 4), np.uint8), True)[1]),
+        ("cryptography", lambda: __import__("cryptography.x509").x509),
+    ]
+    for name, fn in checks:
+        try:
+            results.append(f"OK   {name}: {fn()!r}"[:200])
+        except Exception:
+            ok = False
+            results.append(f"FAIL {name}:\n" + traceback.format_exc())
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(results) + "\n")
+    return 0 if ok else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description="Sisico Remote 호스트")
     ap.add_argument("--port", type=int, default=None)
@@ -799,7 +823,11 @@ def main():
     ap.add_argument("--supervisor", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--install-service", metavar="USER_CONFIG_DIR", help=argparse.SUPPRESS)
     ap.add_argument("--uninstall-service", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--diag", metavar="LOG", help=argparse.SUPPRESS)   # 패키지 점검 (자동 시험용)
     args = ap.parse_args()
+
+    if args.diag:
+        sys.exit(run_diag(args.diag))
 
     if args.supervisor:
         svc.supervisor(["--test"] if args.test else [])
