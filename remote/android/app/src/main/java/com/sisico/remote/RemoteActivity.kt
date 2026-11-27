@@ -56,6 +56,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
     private lateinit var keyPanel: LinearLayout
     private lateinit var input: EditText
     private lateinit var modeButton: Button
+    private lateinit var monitorBar: LinearLayout   // 메뉴 줄의 모니터 버튼들 (🖥 1, 🖥 2 …)
 
     private val ui = Handler(Looper.getMainLooper())
     private var client: RemoteClient? = null
@@ -166,7 +167,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
             barButton("⌨ 키보드") { toggleKeyboard() },
             modeButton,
             barButton("⌘ 단축키") { showShortcuts() },
-            barButton("🖥 모니터") { showMonitors() },
+            LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }.also { monitorBar = it },
             barButton("⚙ 화질") { showSettings() },
             barButton("📁 파일") { files.showMenu() },
             barButton("📋 클립보드") { showClipboard() },
@@ -273,6 +274,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
 
     override fun onAuthed(pcName: String, monitors: List<Monitor>) = ui.post {
         this.monitors = monitors
+        refreshMonitorButtons()
         if (currentMon >= monitors.size) currentMon = 0
         showStatus("화면 받는 중…")
         startMessage("start")
@@ -487,14 +489,23 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
             }.show()
     }
 
-    private fun showMonitors() {
-        if (monitors.isEmpty()) return
-        val names = monitors.mapIndexed { i, m -> "모니터 ${i + 1}  (${m.width}×${m.height})" + if (i == currentMon) "  ✓" else "" }
-        AlertDialog.Builder(this).setTitle("모니터 선택").setItems(names.toTypedArray()) { _, i ->
-            currentMon = i
-            screen.resetZoom()
-            startMessage("cfg")
-        }.show()
+    /** 모니터가 2대 이상이면 메뉴 줄에 번호 버튼을 바로 보여 주고, 지금 보는 모니터를 강조 */
+    private fun refreshMonitorButtons() {
+        monitorBar.removeAllViews()
+        if (monitors.size < 2) return
+        monitors.forEachIndexed { i, _ ->
+            monitorBar.addView(barButton("🖥 ${i + 1}") { switchMonitor(i) }.apply {
+                background = round(if (i == currentMon) 0xFF0F6B66.toInt() else 0x33FFFFFF, dp(8))
+            })
+        }
+    }
+
+    private fun switchMonitor(i: Int) {
+        if (i == currentMon) return
+        currentMon = i
+        screen.resetZoom()
+        startMessage("cfg")
+        refreshMonitorButtons()
     }
 
     private fun showSettings() {

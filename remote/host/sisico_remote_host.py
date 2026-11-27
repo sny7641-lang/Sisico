@@ -206,14 +206,15 @@ class H264Encoder:
         ctx.pix_fmt = "yuv420p"
         ctx.time_base = Fraction(1, 1000)
         ctx.framerate = Fraction(fps, 1)
-        ctx.bit_rate = kbps * 1000
         ctx.gop_size = fps * 10
         ctx.max_b_frames = 0
-        buf = max(kbps // max(fps, 1) * 3, 200)
+        # 화질 기준(CRF) 인코딩 + 최대 속도 제한. 버퍼를 1초 분량으로 넉넉히 둬서
+        # 첫 화면·키프레임(모니터 전환 직후 등)도 처음부터 글씨가 선명하게 나오도록 함.
+        crf = 20 if kbps >= 10000 else 23 if kbps >= 4000 else 26
         ctx.options = {
-            "preset": "ultrafast", "tune": "zerolatency", "profile": "baseline",
+            "preset": "superfast", "tune": "zerolatency", "profile": "baseline", "crf": str(crf),
             "x264-params": f"repeat-headers=1:bframes=0:rc-lookahead=0:sliced-threads=1:"
-                           f"vbv-maxrate={kbps}:vbv-bufsize={buf}:keyint={fps * 10}:min-keyint={fps}",
+                           f"vbv-maxrate={kbps}:vbv-bufsize={kbps}:keyint={fps * 10}:min-keyint={fps}",
         }
         self.ctx = ctx
         self.t0 = time.monotonic()
@@ -267,6 +268,7 @@ class Stream:
         self.want_key = True
         self.prev = None
         self.last_sent = 0.0
+        self.settle = 0
 
     def configure(self, cfg):
         self.pending = cfg
@@ -302,7 +304,11 @@ class Stream:
         frame = self.cap.grab(self.monitor())
         now = time.monotonic()
         same = self.prev is not None and self.prev.shape == frame.shape and np.array_equal(self.prev, frame)
-        if same and not self.want_key and now - self.last_sent < 1.0:
+        if not same:
+            self.settle = 6       # 화면이 멈춘 뒤에도 몇 장 더 보내 남은 흐림을 바로 지움
+        elif self.settle > 0:
+            self.settle -= 1
+        elif not self.want_key and now - self.last_sent < 1.0:
             return info, None  # 화면이 그대로면 보내지 않음 (최소 1초에 한 번은 보냄)
         self.prev = frame.copy()
         force = self.want_key
