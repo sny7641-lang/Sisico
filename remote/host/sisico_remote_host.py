@@ -31,6 +31,11 @@ from fractions import Fraction
 import numpy as np
 
 import win_input as wi
+import win_service as svc
+
+MACHINE = os.environ.get("SISICO_MACHINE") == "1" or "--machine" in sys.argv   # 서비스 모드(SYSTEM)
+if MACHINE:
+    os.environ["SISICO_MACHINE"] = "1"
 
 from remote_proto import (DEFAULT_PORT, DISCOVER_MAGIC, DISCOVERY_PORT, FILE_CHUNK, FLAG_KEY, PBKDF2_ITER,
                           PKT_FILE, PKT_H264, PKT_JPEG, PKT_UPLOAD, VERSION, derive_key, fingerprint, short_fp,
@@ -39,6 +44,10 @@ from remote_proto import (DEFAULT_PORT, DISCOVER_MAGIC, DISCOVERY_PORT, FILE_CHU
 
 # ---------------------------------------------------------------- 설정 파일
 def config_dir():
+    if MACHINE:   # 서비스 모드: 모든 사용자 공통 위치 (SYSTEM·관리자만 쓰기)
+        d = svc.machine_dir()
+        os.makedirs(d, exist_ok=True)
+        return d
     base = os.environ.get("APPDATA") or os.path.expanduser("~")
     d = os.path.join(base, "SisicoRemote")
     os.makedirs(d, exist_ok=True)
@@ -281,6 +290,15 @@ class Stream:
     def produce(self):
         """캡처 + 인코딩 (작업 스레드에서 실행). (안내 메시지 또는 None, 바이너리 또는 None) 반환."""
         info = None
+        if MACHINE and svc.follow_input_desktop():
+            # 잠금 화면 ↔ 바탕 화면 ↔ UAC 창: 보이는 데스크톱이 바뀌면 캡처를 새로 만들고 선명한 첫 장부터
+            if self.cap is not None:
+                try:
+                    self.cap.close()
+                except Exception:
+                    pass
+                self.cap = None
+            self.want_key, self.prev = True, None
         if self.cap is None:
             self.cap = TestPattern() if self.test else ScreenCapture()
         if self.pending is not None:
@@ -301,7 +319,11 @@ class Stream:
                     "mon": self.cfg.get("mon", 0), "mw": mon["width"], "mh": mon["height"]}
         if self.enc is None:
             return info, None
-        frame = self.cap.grab(self.monitor())
+        try:
+            frame = self.cap.grab(self.monitor())
+        except Exception:
+            self.cap = None        # 데스크톱이 막 바뀌는 중 등: 다음에 새로 만듦
+            raise
         now = time.monotonic()
         same = self.prev is not None and self.prev.shape == frame.shape and np.array_equal(self.prev, frame)
         if not same:
@@ -333,7 +355,7 @@ class Stream:
 
 # ---------------------------------------------------------------- 파일 전송
 def receive_dir():
-    d = os.path.join(os.path.expanduser("~"), "Downloads", "Sisico 원격")
+    d = os.path.join(svc.user_home(), "Downloads", "Sisico 원격")
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -356,7 +378,7 @@ def unique_path(folder, name):
 def list_dir(path):
     """폴더 내용. path 가 비어 있으면 자주 쓰는 폴더와 드라이브 목록."""
     if not path:
-        home = os.path.expanduser("~")
+        home = svc.user_home()
         items = []
         for label, sub in (("바탕 화면", "Desktop"), ("다운로드", "Downloads"), ("문서", "Documents"), ("사진", "Pictures")):
             p = os.path.join(home, sub)
@@ -511,6 +533,8 @@ class Connection:
 
     async def on_message(self, m):
         t = m.get("t")
+        if MACHINE and t in ("mm", "mr", "mb", "click", "wh", "key", "combo", "text"):
+            svc.follow_input_desktop()    # 입력도 지금 보이는 데스크톱(잠금 화면 등)으로
         if t in ("start", "cfg"):
             self.cfg.update({k: v for k, v in m.items() if k != "t"})
             self.fps = max(1, min(int(self.cfg.get("fps", 30)), 60))
@@ -665,8 +689,12 @@ class Connection:
 
     async def cursor_loop(self):
         last = None
+        n = 0
         while True:
             await asyncio.sleep(1 / 60)
+            n += 1
+            if MACHINE and n % 30 == 0:
+                svc.follow_input_desktop()
             mon = self.monitor()
             x, y = wi.cursor_pos()
             nx = (x - mon["left"]) / mon["width"]
@@ -742,11 +770,27 @@ def main():
     ap.add_argument("--test", action="store_true", help="실제 화면 대신 시험 무늬를 보냄")
     ap.add_argument("--no-tray", action="store_true", help="작업 표시줄 아이콘 없이 실행 (콘솔·자동 시험용)")
     ap.add_argument("--setup", action="store_true", help="비밀번호 설정 창만 열기")
+    # 서비스 모드 (잠금 화면·로그인 전에도 접속) — 보통은 트레이 메뉴가 알아서 씀
+    ap.add_argument("--machine", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--system-child", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--supervisor", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--install-service", metavar="USER_CONFIG_DIR", help=argparse.SUPPRESS)
+    ap.add_argument("--uninstall-service", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
+
+    if args.supervisor:
+        svc.supervisor(["--test"] if args.test else [])
+        return
+    if args.install_service:
+        ok = svc.install(args.install_service, ["--test"] if args.test else [])
+        os._exit(0 if ok else 1)
+    if args.uninstall_service:
+        svc.uninstall()
+        return
 
     import host_tray
     no_console = sys.stdout is None or not sys.stdout.isatty()
-    use_tray = sys.platform == "win32" and not args.no_tray
+    use_tray = sys.platform == "win32" and not args.no_tray and not args.system_child
     if sys.stdout is None:  # 콘솔 없는 exe: 기록은 파일로
         sys.stdout = sys.stderr = open(os.path.join(config_dir(), "host.log"), "a", encoding="utf-8", buffering=1)
 
@@ -754,6 +798,14 @@ def main():
     cfg = load_config()
     if args.setup:
         host_tray.setup_dialog(set_password, cfg, first="verifier" not in cfg)
+        return
+    if args.system_child:   # 감시 프로그램이 띄운 SYSTEM 호스트
+        if "verifier" not in cfg:
+            svc.log("system host: no password configured")
+            return
+        args.port = int(cfg.get("port", DEFAULT_PORT))
+        svc.log(f"system host listening on {args.port}")
+        asyncio.run(main_async(args, cfg))
         return
     if use_tray and host_tray.already_running():
         host_tray.message_box("이미 실행 중입니다.\n작업 표시줄 오른쪽 아래 아이콘(^ 를 누르면 보임)을 확인하세요.")
@@ -773,7 +825,7 @@ def main():
         save_config(cfg)
     args.port = int(cfg.get("port", DEFAULT_PORT))
     if use_tray:
-        host_tray.run_tray(args, cfg, main_async, config_dir, short_fp)
+        host_tray.run_tray(args, cfg, main_async, config_dir, short_fp, local_ips)
         return
     try:
         asyncio.run(main_async(args, cfg))

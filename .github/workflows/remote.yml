@@ -75,6 +75,28 @@ jobs:
           }
           Stop-Process -Id $p.Id -Force
           exit $code
+      - name: Service mode test (lock screen / before login)
+        working-directory: remote/host
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          # 앞 단계에서 만든 사용자 설정(비밀번호·인증서)을 서비스 모드로 옮겨 설치 → SYSTEM 호스트에 접속 → 제거
+          $exe = "$env:GITHUB_WORKSPACE/sisico_remote_host.exe"
+          $i = Start-Process -FilePath $exe -ArgumentList "--install-service","$env:APPDATA\SisicoRemote","--test" -PassThru
+          if (-not $i.WaitForExit(120000)) { Write-Host "install did not finish"; exit 1 }
+          Write-Host "install exit code: $($i.ExitCode)"
+          schtasks /Query /TN SisicoRemoteHost /V /FO LIST | Select-String "Status|Run As User|Task To Run"
+          Start-Sleep -Seconds 12
+          python smoke_test.py ci-test-pass
+          $code = $LASTEXITCODE
+          Get-Content "$env:ProgramData\SisicoRemote\service.log" -ErrorAction SilentlyContinue
+          Get-CimInstance Win32_Process -Filter "Name='sisico_remote_host.exe'" | Select-Object ProcessId, SessionId, CommandLine | Format-Table -AutoSize | Out-String -Width 300
+          $u = Start-Process -FilePath $exe -ArgumentList "--uninstall-service" -PassThru
+          $u.WaitForExit(60000) | Out-Null
+          schtasks /Query /TN SisicoRemoteHost 2>$null
+          if ($LASTEXITCODE -eq 0) { Write-Host "task still exists after uninstall"; $code = 1 }
+          if ($i.ExitCode -ne 0) { $code = 1 }
+          exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: sisico-remote-host
