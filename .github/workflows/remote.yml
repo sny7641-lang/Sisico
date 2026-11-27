@@ -82,6 +82,9 @@ jobs:
         run: |
           # 앞 단계에서 만든 사용자 설정(비밀번호·인증서)을 서비스 모드로 옮겨 설치 → SYSTEM 호스트에 접속 → 제거
           $exe = "$env:GITHUB_WORKSPACE/sisico_remote_host.exe"
+          # 앞 단계의 시험용 호스트가 남아 있으면 그쪽이 대신 대답하므로 모두 끝냄
+          Stop-Process -Name sisico_remote_host -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
           $i = Start-Process -FilePath $exe -ArgumentList "--install-service","$env:APPDATA\SisicoRemote","--test" -PassThru
           if (-not $i.WaitForExit(120000)) { Write-Host "install did not finish"; exit 1 }
           Write-Host "install exit code: $($i.ExitCode)"
@@ -90,7 +93,12 @@ jobs:
           python smoke_test.py ci-test-pass
           $code = $LASTEXITCODE
           Get-Content "$env:ProgramData\SisicoRemote\service.log" -ErrorAction SilentlyContinue
-          Get-CimInstance Win32_Process -Filter "Name='sisico_remote_host.exe'" | Select-Object ProcessId, SessionId, CommandLine | Format-Table -AutoSize | Out-String -Width 300
+          $procs = Get-CimInstance Win32_Process -Filter "Name='sisico_remote_host.exe'"
+          $procs | Select-Object ProcessId, SessionId, CommandLine | Format-Table -AutoSize | Out-String -Width 300
+          # SYSTEM 호스트가 세션 0 이 아닌 화면 세션에서 돌고 있어야 함
+          $child = $procs | Where-Object { $_.CommandLine -like "*--system-child*" -and $_.SessionId -ne 0 }
+          if (-not $child) { Write-Host "no --system-child host running in a desktop session"; $code = 1 }
+          else { $owner = Invoke-CimMethod -InputObject ($child | Select-Object -First 1) -MethodName GetOwner; Write-Host "system host owner: $($owner.Domain)\$($owner.User)" }
           $u = Start-Process -FilePath $exe -ArgumentList "--uninstall-service" -PassThru
           $u.WaitForExit(60000) | Out-Null
           schtasks /Query /TN SisicoRemoteHost 2>$null

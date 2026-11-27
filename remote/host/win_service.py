@@ -123,12 +123,32 @@ if IS_WINDOWS:
                     ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
                     ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t)]
 
-    k32.WTSGetActiveConsoleSessionId.restype = wintypes.DWORD
-    k32.OpenProcess.restype = wintypes.HANDLE
-    k32.GetCurrentProcess.restype = wintypes.HANDLE
-    k32.CreateJobObjectW.restype = wintypes.HANDLE
-    u32.OpenInputDesktop.restype = wintypes.HANDLE
-    u32.GetThreadDesktop.restype = wintypes.HANDLE
+    # 핸들은 64비트 값이라 형을 꼭 지정해야 함 (안 하면 int 로 넘어가 OverflowError)
+    H, D, B = wintypes.HANDLE, wintypes.DWORD, wintypes.BOOL
+    PH = ctypes.POINTER(wintypes.HANDLE)
+
+    def _sig(fn, res, *args):
+        fn.restype, fn.argtypes = res, list(args)
+
+    _sig(k32.WTSGetActiveConsoleSessionId, D)
+    _sig(k32.GetCurrentProcess, H)
+    _sig(k32.CloseHandle, B, H)
+    _sig(k32.WaitForSingleObject, D, H, D)
+    _sig(k32.TerminateProcess, B, H, wintypes.UINT)
+    _sig(k32.CreateJobObjectW, H, ctypes.c_void_p, wintypes.LPCWSTR)
+    _sig(k32.SetInformationJobObject, B, H, ctypes.c_int, ctypes.c_void_p, D)
+    _sig(k32.AssignProcessToJobObject, B, H, H)
+    _sig(a32.OpenProcessToken, B, H, D, PH)
+    _sig(a32.DuplicateTokenEx, B, H, D, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, PH)
+    _sig(a32.SetTokenInformation, B, H, ctypes.c_int, ctypes.c_void_p, D)
+    _sig(a32.CreateProcessAsUserW, B, H, wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
+         B, D, ctypes.c_void_p, wintypes.LPCWSTR, ctypes.c_void_p, ctypes.c_void_p)
+    _sig(u32.OpenInputDesktop, H, D, B, D)
+    _sig(u32.SetThreadDesktop, B, H)
+    _sig(u32.CloseDesktop, B, H)
+    _sig(u32.GetUserObjectInformationW, B, H, ctypes.c_int, ctypes.c_void_p, D, ctypes.POINTER(D))
+    _sig(wts.WTSQuerySessionInformationW, B, H, D, ctypes.c_int, ctypes.POINTER(wintypes.LPWSTR), ctypes.POINTER(D))
+    _sig(wts.WTSFreeMemory, None, ctypes.c_void_p)
 
     def active_session():
         return k32.WTSGetActiveConsoleSessionId()

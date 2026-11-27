@@ -183,6 +183,19 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
             else:
                 message_box("업데이트하지 못했습니다. 나중에 다시 실행해 주세요.", error=True)
 
+    # 자동 실행이 꺼져 있으면 한 번 물어봄 (예전 버전에서 비밀번호를 정한 경우 설정 창을 못 봤으므로)
+    asked = os.path.join(config_dir(), "autostart_asked")
+    if not autostart_enabled() and not os.path.exists(asked):
+        try:
+            open(asked, "w").close()
+        except OSError:
+            pass
+        if ask_yes_no("Windows 를 켤 때 Sisico 원격도 자동으로 실행할까요?\n(켜 두지 않으면 재부팅 후 직접 실행해야 접속됩니다)"):
+            try:
+                set_autostart(True)
+            except OSError as e:
+                message_box(f"설정하지 못했습니다: {e}", error=True)
+
     def on_ready(info):
         state["info"] = info
         if icon:
