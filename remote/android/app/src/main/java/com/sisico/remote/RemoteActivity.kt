@@ -345,6 +345,7 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (AppLock.onActivityResult(requestCode, resultCode)) return
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FileTransfer.PICK_REQUEST && resultCode == RESULT_OK) files.onPicked(data)
     }
@@ -596,7 +597,9 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
 
     override fun onRestart() {
         super.onRestart()
-        if (pickingFile) { pickingFile = false; client?.msg("kf") } else connect()
+        if (pickingFile) { pickingFile = false; client?.msg("kf"); return }
+        // 앱을 내렸다가 돌아오면(5분 넘게 지났으면) 다시 본인 확인
+        AppLock.require(this, "다시 접속하려면 본인 확인이 필요합니다") { ok -> if (ok) connect() else finish() }
     }
 
     override fun onDestroy() {

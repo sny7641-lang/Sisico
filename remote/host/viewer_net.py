@@ -41,6 +41,17 @@ class PairError(Exception):
     pass
 
 
+TS_ONLY_MSG = ("이 PC는 Tailscale 연결로만 접속을 허용합니다.\n"
+               "이 PC에서도 Tailscale 을 켜고, 상대 PC의 100.x.x.x 주소로 등록하세요.")
+
+
+def close_reason(exc):
+    """연결이 끊긴 이유(PC가 보낸 코드)를 사람이 읽을 말로."""
+    code = getattr(getattr(exc, "rcvd", None), "code", None)
+    return {4001: "비밀번호가 틀렸습니다.", 4003: "실패가 많아 잠시 막혔습니다 (5분 후 다시).",
+            4004: TS_ONLY_MSG}.get(code)
+
+
 def pair(address, port, password, confirm, timeout=10):
     """PC 등록. confirm(지문짧은형, PC이름) 이 True 를 돌려줘야 키를 보냅니다.
     성공하면 {"key": hex, "pin": 지문, "name": PC이름} 반환, 실패하면 PairError."""
@@ -51,7 +62,10 @@ def pair(address, port, password, confirm, timeout=10):
         raise PairError(f"연결할 수 없습니다: {e}\n\nPC 프로그램이 켜져 있는지, 주소·포트가 맞는지 확인하세요.")
     with ws:
         pin = fingerprint(ws.socket.getpeercert(binary_form=True))
-        hello = json.loads(ws.recv(timeout))
+        try:
+            hello = json.loads(ws.recv(timeout))
+        except Exception as e:
+            raise PairError(close_reason(e) or f"PC가 연결을 끊었습니다: {e}")
         if hello.get("t") != "hello" or "salt" not in hello:
             raise PairError("PC 프로그램이 예전 버전입니다. 최신 sisico_remote_host.exe 로 바꿔 주세요.")
         if not confirm(short_fp(pin), hello.get("name", "")):
@@ -155,7 +169,11 @@ class Session:
                                            "PC 프로그램을 새로 설치했다면 목록에서 '수정'으로 다시 등록하세요."))
                 await ws.close()
                 return
-            hello = json.loads(await ws.recv())
+            try:
+                hello = json.loads(await ws.recv())
+            except Exception as e:
+                self.events.put(("closed", close_reason(e) or f"PC가 연결을 끊었습니다: {e}"))
+                return
             await ws.send(json.dumps({"t": "auth", "k": h["key"]}))
             ok = json.loads(await ws.recv())
             if ok.get("t") != "ok":

@@ -382,7 +382,7 @@ def install(user_config_dir, extra_args=()):
         log(f"install: copy failed: {last!r}")
         return (f"프로그램 파일을 바꾸지 못했습니다.\n{installed_exe()}\n{last}\n\n"
                 "백신(알약 등)이 막고 있을 수 있습니다. 알약 '검역소'에 sisico_remote_host 가 있는지 확인하세요.")
-    for name in ("config.json", "cert.pem", "key.pem"):    # 비밀번호·지문 그대로 옮김
+    for name in ("config.json", "cert.pem", "key.pem", "options.json"):    # 비밀번호·지문·설정 그대로 옮김
         src, dst = os.path.join(user_config_dir, name), os.path.join(md, name)
         if not os.path.exists(src) or os.path.abspath(src) == os.path.abspath(dst):
             continue
@@ -391,6 +391,8 @@ def install(user_config_dir, extra_args=()):
     # 폴더는 SYSTEM·관리자만, 인증서(공개 정보)만 일반 사용자도 읽기 (트레이에서 지문 표시용)
     _run(["icacls", md, "/inheritance:r", "/grant:r", "*S-1-5-18:(OI)(CI)F", "*S-1-5-32-544:(OI)(CI)F"])
     _run(["icacls", os.path.join(md, "cert.pem"), "/grant", "*S-1-5-32-545:R"])
+    if os.path.exists(os.path.join(md, "options.json")):
+        _run(["icacls", os.path.join(md, "options.json"), "/grant", "*S-1-5-32-545:R"])
     _run(["icacls", md, "/grant", "*S-1-5-32-545:(RX)"])
     _run(["icacls", install_dir(), "/inheritance:r", "/grant:r", "*S-1-5-18:(OI)(CI)F",
           "*S-1-5-32-544:(OI)(CI)F", "*S-1-5-32-545:(OI)(CI)RX"])

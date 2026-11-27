@@ -25,6 +25,7 @@ import os
 import secrets
 import socket
 import sys
+import subprocess
 import threading
 import time
 from fractions import Fraction
@@ -65,6 +66,43 @@ def load_config():
             return json.load(f)
     except (OSError, ValueError):
         return {}
+
+
+# ---- 공개 설정 (비밀 아님): 트레이(일반 사용자 권한)도 읽을 수 있게 따로 둠
+def options_path():
+    return os.path.join(config_dir(), "options.json")
+
+
+def load_options():
+    try:
+        with open(options_path(), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_options(opts):
+    with open(options_path(), "w", encoding="utf-8") as f:
+        json.dump(opts, f, ensure_ascii=False, indent=2)
+
+
+TAILSCALE_V4 = None
+
+
+def is_tailscale_or_local(ip):
+    """Tailscale 주소(100.64.0.0/10, fd7a:115c:a1e0::/48) 또는 이 PC 자신(127.0.0.1)이면 True."""
+    import ipaddress
+    try:
+        a = ipaddress.ip_address(str(ip).split("%")[0])
+    except ValueError:
+        return False
+    if a.version == 6 and a.ipv4_mapped:
+        a = a.ipv4_mapped
+    if a.is_loopback:
+        return True
+    if a.version == 4:
+        return a in ipaddress.ip_network("100.64.0.0/10")
+    return a in ipaddress.ip_network("fd7a:115c:a1e0::/48")
 
 
 def save_config(cfg):
@@ -440,23 +478,28 @@ class Host:
         self.fails = {}  # ip -> (횟수, 마지막 시각)
         self.active = 0
         self.on_event = on_event or (lambda kind, ip, active: None)
+        self.tailscale_only = bool(load_options().get("tailscale_only"))
         self.cfg_mtime = self._mtime()
 
     @staticmethod
     def _mtime():
-        try:
-            return os.path.getmtime(config_path())
-        except OSError:
-            return 0
+        m = 0.0
+        for p in (config_path(), options_path()):
+            try:
+                m = max(m, os.path.getmtime(p))
+            except OSError:
+                pass
+        return m
 
     def refresh(self):
-        """'비밀번호 바꾸기' 창에서 바꾼 설정을 다시 읽음 (재시작 없이)."""
+        """'비밀번호 바꾸기'·'Tailscale로만 접속' 등 바뀐 설정을 다시 읽음 (재시작 없이)."""
         m = self._mtime()
         if m != self.cfg_mtime:
             self.cfg_mtime = m
             cfg = load_config()
             if "verifier" in cfg:
                 self.salt, self.iter, self.verifier = cfg["salt"], int(cfg["iter"]), cfg["verifier"]
+            self.tailscale_only = bool(load_options().get("tailscale_only"))
 
     def _blocked(self, ip):
         n, t = self.fails.get(ip, (0, 0))
@@ -467,10 +510,15 @@ class Host:
 
     async def handler(self, ws):
         ip = ws.remote_address[0] if ws.remote_address else "?"
+        self.refresh()
+        if self.tailscale_only and not is_tailscale_or_local(ip):
+            # 'Tailscale로만 접속 허용': 같은 와이파이 등 다른 곳에서 온 연결은 비밀번호를 묻기도 전에 끊음
+            print(f"[{ip}] Tailscale 이 아닌 곳에서 접속 시도 → 거부")
+            await ws.close(4004, "tailscale only")
+            return
         if self._blocked(ip):
             await ws.close(4003, "too many attempts")
             return
-        self.refresh()
         # 연결은 이미 TLS 로 암호화돼 있고, 앱은 인증서 지문으로 이 PC가 맞는지 확인한 뒤에만 키를 보냅니다.
         await ws.send(json.dumps({"t": "hello", "salt": self.salt, "iter": self.iter,
                                   "name": socket.gethostname(), "ver": VERSION}))
@@ -730,13 +778,18 @@ class Connection:
 
 # ---------------------------------------------------------------- 같은 와이파이에서 찾기 (UDP)
 class Discovery(asyncio.DatagramProtocol):
-    def __init__(self, port):
+    def __init__(self, port, host=None):
         self.port = port
+        self.host = host
 
     def connection_made(self, transport):
         self.transport = transport
 
     def datagram_received(self, data, addr):
+        if self.host is not None:
+            self.host.refresh()
+            if self.host.tailscale_only:   # Tailscale 전용이면 같은 와이파이 검색에 답하지 않음
+                return
         if data.strip() == DISCOVER_MAGIC:
             reply = json.dumps({"name": socket.gethostname(), "port": self.port, "ver": VERSION})
             self.transport.sendto(reply.encode("utf-8"), addr)
@@ -768,7 +821,7 @@ async def main_async(args, cfg, on_ready=None, on_event=None):
     tls.load_cert_chain(cert, key)
     loop = asyncio.get_running_loop()
     try:
-        await loop.create_datagram_endpoint(lambda: Discovery(args.port), local_addr=("0.0.0.0", DISCOVERY_PORT),
+        await loop.create_datagram_endpoint(lambda: Discovery(args.port, host), local_addr=("0.0.0.0", DISCOVERY_PORT),
                                             allow_broadcast=True)
     except OSError as e:
         print("LAN 검색 기능을 켜지 못했습니다:", e)
@@ -823,7 +876,8 @@ def main():
     ap.add_argument("--supervisor", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--install-service", metavar="USER_CONFIG_DIR", help=argparse.SUPPRESS)
     ap.add_argument("--uninstall-service", action="store_true", help=argparse.SUPPRESS)
-    ap.add_argument("--result", help=argparse.SUPPRESS)   # 설치 결과를 적을 파일 (트레이가 읽음)
+    ap.add_argument("--result", help=argparse.SUPPRESS)
+    ap.add_argument("--set-tailscale-only", choices=["0", "1"], help=argparse.SUPPRESS)   # 설치 결과를 적을 파일 (트레이가 읽음)
     ap.add_argument("--diag", metavar="LOG", help=argparse.SUPPRESS)   # 패키지 점검 (자동 시험용)
     args = ap.parse_args()
 
@@ -833,6 +887,21 @@ def main():
     if args.supervisor:
         svc.supervisor(["--test"] if args.test else [])
         return
+    if args.set_tailscale_only is not None:
+        err = ""
+        try:
+            opts = load_options()
+            opts["tailscale_only"] = args.set_tailscale_only == "1"
+            save_options(opts)
+            if MACHINE and sys.platform == "win32":   # 트레이(일반 사용자)가 상태를 읽을 수 있게
+                subprocess.run(["icacls", options_path(), "/grant", "*S-1-5-32-545:R"], capture_output=True,
+                               creationflags=0x08000000)
+        except Exception as e:
+            err = f"오류: {e!r}"
+        if args.result:
+            with open(args.result, "w", encoding="utf-8") as f:
+                f.write(err or "ok")
+        os._exit(0 if not err else 1)
     if args.install_service or args.uninstall_service:
         import traceback
         try:

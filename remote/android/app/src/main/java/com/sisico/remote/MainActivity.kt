@@ -28,6 +28,28 @@ import java.util.UUID
 class MainActivity : Activity() {
 
     private lateinit var list: LinearLayout
+    private lateinit var lockButton: Button
+
+    private fun updateLockButton() {
+        lockButton.text = if (Settings(this).appLock) "🔒 앱 잠금: 켜짐 (접속할 때 지문·PIN 확인)" else "🔓 앱 잠금: 꺼짐"
+    }
+
+    private fun toggleLock() {
+        val s = Settings(this)
+        if (s.appLock) {   // 끄는 것도 본인 확인 후에만
+            AppLock.require(this, "앱 잠금을 끄려면 본인 확인이 필요합니다", force = true) { ok ->
+                if (ok) { s.appLock = false; updateLockButton() }
+            }
+        } else {
+            s.appLock = true; updateLockButton()
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (AppLock.onActivityResult(requestCode, resultCode)) return
+        super.onActivityResult(requestCode, resultCode, data)
+    }
     private fun dp(v: Int) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +75,9 @@ class MainActivity : Activity() {
             text = "와이파이에서 찾기"; setOnClickListener { discover() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(buttons)
+        lockButton = Button(this).apply { setOnClickListener { toggleLock() } }
+        root.addView(lockButton, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), 0, dp(12), dp(12)) })
+        updateLockButton()
         setContentView(root)
     }
 
@@ -86,7 +111,9 @@ class MainActivity : Activity() {
                         AlertDialog.Builder(this@MainActivity).setTitle("다시 등록이 필요합니다")
                             .setMessage("보안이 강화되어(암호화 연결) 이 PC를 한 번 다시 등록해야 합니다.\nPC 프로그램도 최신 버전으로 바꿔 주세요.")
                             .setPositiveButton("다시 등록") { _, _ -> editHost(h) }.setNegativeButton("취소", null).show()
-                    } else startActivity(Intent(this@MainActivity, RemoteActivity::class.java).putExtra("id", h.id))
+                    } else AppLock.require(this@MainActivity, "PC에 접속하려면 본인 확인이 필요합니다") { ok ->
+                        if (ok) startActivity(Intent(this@MainActivity, RemoteActivity::class.java).putExtra("id", h.id))
+                    }
                 }
                 setOnLongClickListener { hostMenu(h); true }
             }

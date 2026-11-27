@@ -97,8 +97,10 @@ class RemoteClient(private val host: HostEntry, private val cb: Callback, privat
                 report(when (code) {
                     4001 -> "비밀번호가 틀렸습니다"
                     4003 -> "실패가 많아 잠시 막혔습니다 (5분 후 다시)"
+                    4004 -> "이 PC는 Tailscale 연결로만 접속을 허용합니다.\n\n" +
+                        "휴대폰의 Tailscale 앱을 켜고(Connected), PC의 100.x.x.x 주소로 등록·접속하세요."
                     else -> "PC가 연결을 끊었습니다"
-                }, code == 4001)
+                }, code == 4001 || code == 4004)
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = report("연결이 끊겼습니다", false)

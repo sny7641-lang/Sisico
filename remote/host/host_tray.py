@@ -264,6 +264,7 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
         text = ("앱에 입력할 주소\n" + ("\n".join(lines) or "   (찾지 못함)") +
                 f"\n\n포트: {info['port']}\n\n이 PC의 지문: {short_fp(info['fp']) if info['fp'] else '?'}\n"
                 "(앱에서 PC를 등록할 때 나오는 지문과 같은지 확인하세요)\n\n" + mode +
+                "\nTailscale 로만 접속 허용: " + ("켜짐" if tailscale_only() else "꺼짐") +
                 ("" if service else f"\n지금 접속 중: {state['active']}대"))
         threading.Thread(target=message_box, args=(text, f"{APP_NAME} - 연결 정보"), daemon=True).start()
 
@@ -300,6 +301,51 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
             else:
                 message_box(f"끄지 못했습니다.\n\n{why}", error=True)
 
+    def options_file():
+        return os.path.join(svc.machine_dir() if service else config_dir(), "options.json")
+
+    def tailscale_only():
+        try:
+            import json
+            with open(options_file(), encoding="utf-8") as f:
+                return bool(json.load(f).get("tailscale_only"))
+        except (OSError, ValueError):
+            return False
+
+    def toggle_tailscale_only(_icon, _item):
+        turn_on = not tailscale_only()
+        if turn_on:
+            has_ts = any(ip.startswith("100.") for ip in local_ips())
+            msg = ("Tailscale 로만 접속을 허용할까요?\n\n"
+                   "· 같은 와이파이 등 Tailscale 이 아닌 곳에서 오는 접속은 모두 막습니다.\n"
+                   "· 휴대폰에서도 Tailscale 을 켠 상태로, PC의 100.x.x.x 주소로 접속해야 합니다.\n"
+                   "  (192.168.x.x 주소로 등록된 PC는 앱에서 100.x 주소로 다시 등록하세요)")
+            if not has_ts:
+                msg = ("⚠ 지금 이 PC에서 Tailscale 이 꺼져 있거나 설치되어 있지 않습니다.\n"
+                       "켜면 Tailscale 을 켜기 전까지는 어디서도 접속할 수 없습니다.\n\n") + msg
+            if not ask_yes_no(msg):
+                return
+        if service:   # 서비스 설정은 관리자만 바꿀 수 있음
+            ok, why = svc.run_elevated(["--set-tailscale-only", "1" if turn_on else "0", "--machine"])
+            if not ok:
+                message_box(f"바꾸지 못했습니다.\n\n{why}", error=True)
+                return
+        else:
+            try:
+                import json
+                try:
+                    with open(options_file(), encoding="utf-8") as f:
+                        opts = json.load(f)
+                except (OSError, ValueError):
+                    opts = {}
+                opts["tailscale_only"] = turn_on
+                with open(options_file(), "w", encoding="utf-8") as f:
+                    json.dump(opts, f, ensure_ascii=False, indent=2)
+            except OSError as e:
+                message_box(f"바꾸지 못했습니다: {e}", error=True)
+                return
+        message_box("Tailscale 로만 접속 허용: " + ("켜짐" if turn_on else "꺼짐"))
+
     def toggle_autostart(_icon, _item):
         try:
             set_autostart(not autostart_enabled())
@@ -316,6 +362,8 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
         pystray.MenuItem("연결 정보 보기", show_info, default=True),
         pystray.MenuItem("비밀번호 바꾸기", change_password),
         pystray.MenuItem("잠금 화면·로그인 전에도 접속", toggle_service, checked=lambda _: service),
+        pystray.MenuItem("Tailscale 로만 접속 허용 (같은 와이파이 차단)", toggle_tailscale_only,
+                         checked=lambda _: tailscale_only()),
         pystray.MenuItem("Windows 시작 시 자동 실행" + (" (이 아이콘)" if service else ""), toggle_autostart,
                          checked=lambda _: autostart_enabled()),
         pystray.MenuItem("설정·로그 폴더 열기", open_folder),
