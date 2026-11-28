@@ -250,8 +250,16 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
     // ================================================================ 연결
     private fun connect() {
         closedByUser = false
-        showStatus("${host.name.ifEmpty { host.address }} 에 연결 중…")
-        client = RemoteClient(host, this).also { it.connect() }
+        val needVpn = settings.autoTailscale && TailscaleControl.needed(host.address) &&
+            TailscaleControl.installed(this) && !TailscaleControl.vpnActive(this)
+        if (needVpn) showStatus("Tailscale 켜는 중…")
+        TailscaleControl.ensureOn(this, host.address) { vpnOn ->
+            if (closedByUser || isFinishing) return@ensureOn
+            if (needVpn && !vpnOn) {
+                showStatus("Tailscale 을 켜지 못했습니다. Tailscale 앱을 직접 켜 주세요. 계속 연결해 봅니다…")
+            } else showStatus("${host.name.ifEmpty { host.address }} 에 연결 중…")
+            client = RemoteClient(host, this).also { it.connect() }
+        }
     }
 
     private fun disconnect() {
@@ -592,7 +600,10 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
 
     override fun onStop() {
         super.onStop()
-        if (!isChangingConfigurations && !pickingFile) disconnect()   // 앱을 내리면 연결을 끊음 (배터리·데이터 절약)
+        if (!isChangingConfigurations && !pickingFile) {
+            disconnect()   // 앱을 내리면 연결을 끊음 (배터리·데이터 절약)
+            TailscaleControl.offIfWeStarted(this)   // 다른 앱(삼성페이 등)으로 가면 VPN 도 끔
+        }
     }
 
     override fun onRestart() {
@@ -606,5 +617,6 @@ class RemoteActivity : Activity(), RemoteClient.Callback, ScreenView.Listener {
         super.onDestroy()
         ui.removeCallbacksAndMessages(null)
         disconnect()
+        if (!isChangingConfigurations) TailscaleControl.offIfWeStarted(this)
     }
 }

@@ -29,7 +29,26 @@ class MainActivity : Activity() {
 
     private lateinit var list: LinearLayout
     private lateinit var lockButton: Button
+    private lateinit var tsButton: Button
 
+    private fun updateTsButton() {
+        tsButton.text = if (Settings(this).autoTailscale) "🛡 Tailscale 자동: 접속할 때만 켜고 끝나면 끔" else "🛡 Tailscale 자동: 꺼짐 (직접 켜고 끄기)"
+    }
+
+    private fun toggleTs() {
+        val s = Settings(this)
+        s.autoTailscale = !s.autoTailscale
+        updateTsButton()
+        if (s.autoTailscale && !TailscaleControl.installed(this)) {
+            AlertDialog.Builder(this).setMessage("Tailscale 앱이 설치되어 있지 않습니다. Play 스토어에서 설치하고 로그인해 두세요.")
+                .setPositiveButton("확인", null).show()
+        } else if (s.autoTailscale) {
+            AlertDialog.Builder(this).setTitle("Tailscale 자동")
+                .setMessage("100.x.x.x 주소로 등록한 PC에 접속할 때만 Tailscale 을 켜고, 원격을 끝내거나 다른 앱으로 가면 끕니다.\n\n" +
+                    "Tailscale 앱 설정에서 '항상 켜짐(Always-on VPN)'은 꺼 두세요.")
+                .setPositiveButton("확인", null).show()
+        }
+    }
     private fun updateLockButton() {
         lockButton.text = if (Settings(this).appLock) "🔒 앱 잠금: 켜짐 (접속할 때 지문·PIN 확인)" else "🔓 앱 잠금: 꺼짐"
     }
@@ -75,6 +94,9 @@ class MainActivity : Activity() {
             text = "와이파이에서 찾기"; setOnClickListener { discover() }
         }, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(buttons)
+        tsButton = Button(this).apply { setOnClickListener { toggleTs() } }
+        root.addView(tsButton, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), 0, dp(12), 0) })
+        updateTsButton()
         lockButton = Button(this).apply { setOnClickListener { toggleLock() } }
         root.addView(lockButton, LinearLayout.LayoutParams(-1, -2).apply { setMargins(dp(12), 0, dp(12), dp(12)) })
         updateLockButton()
@@ -188,6 +210,10 @@ class MainActivity : Activity() {
      */
     private fun pair(base: HostEntry, password: String) {
         val wait = AlertDialog.Builder(this).setMessage("${base.address} 에 연결 중…").setCancelable(false).show()
+        TailscaleControl.ensureOn(this, base.address) { pairConnect(base, password, wait) }
+    }
+
+    private fun pairConnect(base: HostEntry, password: String, wait: AlertDialog) {
         var client: RemoteClient? = null
         var pin = ""
         var key = ""
@@ -216,12 +242,14 @@ class MainActivity : Activity() {
 
             override fun onAuthed(pcName: String, monitors: List<Monitor>) = runOnUiThread {
                 client?.close()
+                TailscaleControl.offIfWeStarted(this@MainActivity)
                 wait.dismiss()
                 saveHost(base.copy(name = base.name.ifEmpty { pcName }, keyHex = key, pin = pin))
                 Toast.makeText(this@MainActivity, "등록했습니다", Toast.LENGTH_SHORT).show()
             }.let {}
 
             override fun onClosed(reason: String, authFailed: Boolean) = runOnUiThread {
+                TailscaleControl.offIfWeStarted(this@MainActivity)
                 wait.dismiss()
                 AlertDialog.Builder(this@MainActivity).setTitle("등록하지 못했습니다").setMessage(reason)
                     .setPositiveButton("다시 입력") { _, _ -> editHost(base) }

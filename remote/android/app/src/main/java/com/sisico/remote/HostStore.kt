@@ -100,6 +100,9 @@ class Settings(ctx: Context) {
     var speed: Float
         get() = p.getFloat("speed", 1.3f)
         set(v) = p.edit().putFloat("speed", v).apply()
+    var autoTailscale: Boolean
+        get() = p.getBoolean("autoTailscale", true)
+        set(v) = p.edit().putBoolean("autoTailscale", v).apply()
     var appLock: Boolean
         get() = p.getBoolean("appLock", true)
         set(v) = p.edit().putBoolean("appLock", v).apply()
