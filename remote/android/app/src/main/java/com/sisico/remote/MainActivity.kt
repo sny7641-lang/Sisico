@@ -76,7 +76,8 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 
         root.addView(TextView(this).apply {
-            text = "Sisico 원격"; textSize = 22f; setTypeface(typeface, Typeface.BOLD)
+            val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "" }
+            text = "Sisico 원격  $ver"; textSize = 22f; setTypeface(typeface, Typeface.BOLD)
             setTextColor(Color.WHITE); setBackgroundColor(0xFF0F6B66.toInt())
             setPadding(dp(20), dp(18), dp(20), dp(18))
         })

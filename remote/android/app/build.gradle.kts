@@ -11,8 +11,10 @@ android {
         applicationId = "com.sisico.remote"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // CI 가 -PbuildNumber=실행 번호 를 넘김 → 릴리스 제목의 v번호와 같음
+        val build = (project.findProperty("buildNumber") as String?)?.toIntOrNull() ?: 1
+        versionCode = build
+        versionName = "v$build"
     }
 
     buildTypes {

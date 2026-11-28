@@ -261,7 +261,12 @@ def run_tray(args, cfg, main_async, config_dir, short_fp, local_ips):
             lines.append(f"   {ip}{tag}")
         mode = ("잠금 화면·로그인 전에도 접속: 켜짐" if service else
                 "잠금 화면·로그인 전에도 접속: 꺼짐 (로그인한 동안만 접속)")
-        text = ("앱에 입력할 주소\n" + ("\n".join(lines) or "   (찾지 못함)") +
+        try:
+            import build_info
+            ver = f"버전 v{build_info.BUILD} ({build_info.BUILD_TIME} 빌드)"
+        except ImportError:
+            ver = "개발용 버전"
+        text = (ver + "\n\n앱에 입력할 주소\n" + ("\n".join(lines) or "   (찾지 못함)") +
                 f"\n\n포트: {info['port']}\n\n이 PC의 지문: {short_fp(info['fp']) if info['fp'] else '?'}\n"
                 "(앱에서 PC를 등록할 때 나오는 지문과 같은지 확인하세요)\n\n" + mode +
                 "\nTailscale 로만 접속 허용: " + ("켜짐" if tailscale_only() else "꺼짐") +

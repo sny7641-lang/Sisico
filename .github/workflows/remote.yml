@@ -23,7 +23,7 @@ jobs:
         working-directory: remote/android
         run: |
           chmod +x gradlew
-          ./gradlew testDebugUnitTest assembleDebug --no-daemon \
+          ./gradlew testDebugUnitTest assembleDebug --no-daemon -PbuildNumber=${{ github.run_number }} \
             -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/assets/debug.keystore" \
             -Pandroid.injected.signing.store.password=android \
             -Pandroid.injected.signing.key.alias=androiddebugkey \
@@ -47,6 +47,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pyinstaller
+          $kst = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId((Get-Date), "Korea Standard Time").ToString("yyyy-MM-dd HH:mm")
+          "BUILD = ${{ github.run_number }}`nBUILD_TIME = `"$kst`"`n" | Out-File -Encoding utf8 build_info.py
           pyinstaller --onefile --windowed --name sisico_remote_host --collect-all av --hidden-import pystray._win32 sisico_remote_host.py
           pyinstaller --onefile --windowed --name sisico_remote_viewer --collect-all av sisico_remote_viewer.py
           Copy-Item dist/sisico_remote_host.exe $env:GITHUB_WORKSPACE/sisico_remote_host.exe
@@ -138,11 +140,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
+      - name: Build time (Korea)
+        id: when
+        run: echo "kst=$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')" >> "$GITHUB_OUTPUT"
       - name: Publish to the "remote-latest" release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: remote-latest
-          name: Sisico 원격 (최신 빌드)
+          name: Sisico 원격 v${{ github.run_number }} (최신)
           prerelease: false
           make_latest: false
           target_commitish: ${{ github.sha }}
@@ -152,6 +157,8 @@ jobs:
             - 휴대폰에서 조작: **sisico-remote.apk** 설치
             - 다른 PC에서 조작: **sisico_remote_viewer.exe** 실행
             자세한 사용법: remote/README.md
+            **버전 v${{ github.run_number }}** · 빌드 시각 ${{ steps.when.outputs.kst }} (한국 시간)
+            휴대폰 앱 첫 화면 제목 옆과 PC 트레이 '연결 정보 보기'에 같은 번호가 나옵니다.
             빌드 커밋: ${{ github.sha }}
           files: |
             sisico-remote.apk
